@@ -1,0 +1,32 @@
+# Data warehouse local + ejecución del pipeline:
+#   docker compose up -d postgres
+#   docker compose run --rm etl
+# Reportes en ./reports · DW en postgresql://cartera:cartera@localhost:5432/cartera
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: cartera
+      POSTGRES_PASSWORD: cartera
+      POSTGRES_DB: cartera
+    ports: ["5432:5432"]
+    volumes: [dwdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cartera -d cartera"]
+      interval: 5s
+      retries: 10
+
+  etl:
+    build: .
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      CARTERA_DATABASE_URL: postgresql+psycopg://cartera:cartera@postgres:5432/cartera
+    entrypoint: ["sh", "-c"]
+    command: ["cartera generate --out /tmp/raw && cartera run --raw /tmp/raw --out /reports"]
+    volumes: ["./reports:/reports"]
+    profiles: ["job"]
+
+volumes:
+  dwdata:
