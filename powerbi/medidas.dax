@@ -1,0 +1,107 @@
+// =====================================================================================
+//  Medidas DAX del modelo "Cartera & Cobranza"
+//  Modelo: esquema estrella cargado por cartera-analytics (ver powerbi/README.md).
+//  Las definiciones replican docs/kpis.md y las vistas sql/views.sql: los números de
+//  Power BI, del reporte Excel y del tablero HTML deben coincidir.
+// =====================================================================================
+
+// ---------- Cartera (fact_cartera: una fila por obligación y corte) ----------------------
+Saldo Total =
+SUM ( fact_cartera[saldo_capital] )
+
+Saldo Vencido =
+CALCULATE ( [Saldo Total], fact_cartera[dias_mora] > 0 )
+
+Obligaciones =
+COUNTROWS ( fact_cartera )
+
+Obligaciones en Mora =
+CALCULATE ( [Obligaciones], fact_cartera[en_mora] = TRUE () )
+
+PAR30 =
+DIVIDE ( CALCULATE ( [Saldo Total], fact_cartera[dias_mora] > 30 ), [Saldo Total] )
+
+PAR90 =
+DIVIDE ( CALCULATE ( [Saldo Total], fact_cartera[dias_mora] > 90 ), [Saldo Total] )
+
+// Saldo del último corte visible (evita sumar cortes cuando se filtra un trimestre o año).
+Saldo Último Corte =
+VAR UltimoCorte = MAX ( fact_cartera[corte_key] )
+RETURN CALCULATE ( [Saldo Total], fact_cartera[corte_key] = UltimoCorte )
+
+Saldo Vencido Mes Anterior =
+CALCULATE ( [Saldo Vencido], DATEADD ( dim_fecha[fecha], -1, MONTH ) )
+
+// ---------- Recaudo (fact_pagos) ---------------------------------------------------------
+Recaudo =
+SUM ( fact_pagos[valor] )
+
+Recaudo MTD =
+TOTALMTD ( [Recaudo], dim_fecha[fecha] )
+
+Recaudo YTD =
+TOTALYTD ( [Recaudo], dim_fecha[fecha] )
+
+Recaudo Mes Anterior =
+CALCULATE ( [Recaudo], DATEADD ( dim_fecha[fecha], -1, MONTH ) )
+
+Recaudo Var % =
+DIVIDE ( [Recaudo] - [Recaudo Mes Anterior], [Recaudo Mes Anterior] )
+
+Recaudo Mismo Mes Año Anterior =
+CALCULATE ( [Recaudo], SAMEPERIODLASTYEAR ( dim_fecha[fecha] ) )
+
+// Recaudo del mes sobre el saldo vencido del corte anterior.
+Tasa de Recuperación =
+DIVIDE ( [Recaudo], [Saldo Vencido Mes Anterior] )
+
+Ticket Promedio de Pago =
+DIVIDE ( [Recaudo], COUNTROWS ( fact_pagos ) )
+
+// ---------- Gestión (fact_gestiones) -----------------------------------------------------
+Gestiones =
+COUNTROWS ( fact_gestiones )
+
+Contactos =
+CALCULATE ( [Gestiones], fact_gestiones[es_contacto] = TRUE () )
+
+Contactabilidad =
+DIVIDE ( [Contactos], [Gestiones] )
+
+Gestiones por Obligación en Mora =
+DIVIDE ( [Gestiones], [Obligaciones en Mora] )
+
+// ---------- Promesas de pago (fact_promesas) ---------------------------------------------
+// La relación activa de fact_promesas con dim_fecha es por fecha_promesa_key.
+// La relación por fecha_gestion_key es inactiva y se usa con USERELATIONSHIP.
+Promesas Evaluables =
+CALCULATE ( COUNTROWS ( fact_promesas ), fact_promesas[evaluable] = TRUE () )
+
+Promesas Cumplidas =
+CALCULATE ( COUNTROWS ( fact_promesas ), fact_promesas[cumplida] = TRUE () )
+
+Efectividad de Promesas =
+DIVIDE ( [Promesas Cumplidas], [Promesas Evaluables] )
+
+Recaudo de Promesas =
+CALCULATE ( SUM ( fact_promesas[valor_pagado] ), fact_promesas[cumplida] = TRUE () )
+
+Recaudo de Promesas por Fecha de Gestión =
+CALCULATE (
+    [Recaudo de Promesas],
+    USERELATIONSHIP ( fact_promesas[fecha_gestion_key], dim_fecha[fecha_key] )
+)
+
+// ---------- Ranking de gestores ----------------------------------------------------------
+Ranking Gestor =
+IF (
+    HASONEVALUE ( dim_gestor[nombre] ),
+    RANKX ( ALLSELECTED ( dim_gestor[nombre] ), [Recaudo de Promesas por Fecha de Gestión], , DESC, DENSE )
+)
+
+// ---------- Formato condicional y textos dinámicos ---------------------------------------
+Color PAR30 =
+SWITCH ( TRUE (), [PAR30] <= 0.05, "#15803D", [PAR30] <= 0.10, "#B45309", "#B91C1C" )
+
+Título Reporte =
+"Cartera y cobranza · corte " & FORMAT ( MAX ( dim_fecha[fecha] ), "mmmm yyyy", "es-CO" )
