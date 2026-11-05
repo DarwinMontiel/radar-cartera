@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.env
+# Salidas del pipeline (se regeneran; el tablero publicado vive en GitHub Pages)
+data/raw/
+reports/
+site/
+*.sqlite
+*.db
+.vscode/
+.idea/
+.DS_Store
