@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tablero de Cartera</title>
+  <meta name="description" content="Tablero analítico de cartera y cobranza: saldo, mora, recaudo, roll rates, gestores y calidad de datos.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230d9488'/><path d='M8 22V12m6 10V8m6 14v-6m6 6V14' stroke='white' stroke-width='3' stroke-linecap='round'/></svg>">
+  <style>
+    :root {
+      --bg: #f4f7f8; --surface: #fff; --surface-2: #f8fafb; --border: #e2e8ec;
+      --text: #0f1f2e; --muted: #5b6b78; --accent: #0d9488; --accent-rgb: 13 148 136;
+      --c1: #0d9488; --c2: #2563eb; --c3: #f59e0b; --c4: #e11d48; --c5: #7c3aed; --c6: #475569;
+      --ok: #15803d; --err: #b91c1c; --err-soft: #fee2e2; --topbar: #0f1f2e; --radius: 12px;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0b141c; --surface: #111d27; --surface-2: #0f1922; --border: #1f2f3c;
+        --text: #e6edf2; --muted: #8aa0b0; --accent: #2dd4bf; --accent-rgb: 45 212 191;
+        --c1: #2dd4bf; --c2: #60a5fa; --c3: #fbbf24; --c4: #fb7185; --c5: #a78bfa; --c6: #94a3b8;
+        --ok: #4ade80; --err: #f87171; --err-soft: #3b1414; --topbar: #08111a; color-scheme: dark;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
+    a { color: var(--accent); }
+    header { background: var(--topbar); color: #fff; padding: 18px 24px; display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+    header h1 { margin: 0; font-size: 18px; }
+    header p { margin: 2px 0 0; color: #9fb3c2; font-size: 13px; }
+    .actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .badge { background: #334155; color: #e2e8f0; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+    .btn { background: #0d9488; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; }
+    main { max-width: 1280px; margin: 0 auto; padding: 24px; display: grid; gap: 20px; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    @media (min-width: 1100px) { .kpis { grid-template-columns: repeat(4, 1fr); } }
+    .kpi, .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+    .kpi { padding: 14px 16px; }
+    .kpi h2 { margin: 0; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+    .kpi p { margin: 4px 0 0; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .kpi small { color: var(--muted); }
+    .up { color: var(--ok); } .down { color: var(--err); }
+    .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 20px; }
+    .panel { padding: 16px 18px; min-width: 0; }
+    .panel h2 { margin: 0 0 4px; font-size: 15px; }
+    .panel .hint { margin: 0 0 12px; color: var(--muted); font-size: 12.5px; }
+    .chart { position: relative; height: 280px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+    th:first-child, td:first-child, td.text, th.text { text-align: left; }
+    th { color: var(--muted); font-size: 12px; font-weight: 600; background: var(--surface-2); }
+    tr.fail td { background: var(--err-soft); }
+    .heat td.cell { text-align: center; font-weight: 600; }
+    code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12px; }
+    footer { text-align: center; color: var(--muted); font-size: 12.5px; padding: 4px 16px 32px; }
+    @media (max-width: 640px) { main { padding: 16px; } header { padding: 14px 16px; } .chart { height: 240px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Cartera &amp; Cobranza · Tablero analítico</h1>
+      <p>Corte {{ month }} · generado {{ run.generated[:16] | replace("T", " ") }} · v{{ run.version }}</p>
+    </div>
+    <div class="actions">
+      <span class="badge">Datos sintéticos</span>
+      {% if run.excel %}<a class="btn" href="{{ run.excel }}" download>Descargar reporte Excel</a>{% endif %}
+    </div>
+  </header>
+
+  <main>
+    <section class="kpis" id="kpis" aria-label="Indicadores del mes"></section>
+
+    <section class="charts">
+      <article class="panel"><h2>Recaudo mensual</h2><p class="hint">Barras: recaudo (COP millones) · Línea: tasa de recuperación sobre el saldo vencido del corte anterior</p><div class="chart"><canvas id="ch-recaudo"></canvas></div></article>
+      <article class="panel"><h2>Saldo por franja de mora</h2><p class="hint">Composición del saldo de capital en cada corte</p><div class="chart"><canvas id="ch-franjas"></canvas></div></article>
+      <article class="panel"><h2>Riesgo: PAR30 y PAR90</h2><p class="hint">Saldo con más de 30 / 90 días de mora sobre el saldo total</p><div class="chart"><canvas id="ch-par"></canvas></div></article>
+      <article class="panel"><h2>Gestión: contactabilidad y promesas</h2><p class="hint">Contactos / gestiones · promesas cumplidas / promesas evaluables</p><div class="chart"><canvas id="ch-gestion"></canvas></div></article>
+    </section>
+
+    <section class="panel">
+      <h2>Roll rate · {{ month }}</h2>
+      <p class="hint">Probabilidad de pasar de la franja del corte anterior (filas) a la franja de este corte (columnas)</p>
+      <div class="table-wrap"><table class="heat" id="roll"></table></div>
+    </section>
+
+    <section class="panel">
+      <h2>Ranking de gestores · {{ month }}</h2>
+      <p class="hint">Ordenado por recaudo de promesas cumplidas (gestiones del mes)</p>
+      <div class="table-wrap"><table id="ranking"></table></div>
+    </section>
+
+    <section class="charts">
+      <article class="panel"><h2>Cartera por producto · {{ month }}</h2><p class="hint">Saldo y PAR30 por línea de crédito</p><div class="table-wrap"><table id="products"></table></div></article>
+      <article class="panel"><h2>Recaudo por canal · {{ month }}</h2><p class="hint">Valor y número de pagos por canal de recaudo</p><div class="table-wrap"><table id="channels"></table></div></article>
+    </section>
+
+    <section class="panel">
+      <h2>Calidad de datos</h2>
+      <p class="hint" id="rejected-summary"></p>
+      <div class="table-wrap"><table id="quality"></table></div>
+    </section>
+  </main>
+
+  <footer>
+    Ejecución <code>{{ run.id }}</code> ·
+    <a href="https://github.com/DarwinMontiel/cartera-analytics">Código fuente</a> ·
+    Todos los datos son sintéticos, generados por el propio proyecto.
+  </footer>
+
+  <script id="payload" type="application/json">{{ data }}</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    const D = JSON.parse(document.getElementById("payload").textContent);
+    const css = getComputedStyle(document.documentElement);
+    const v = (name) => css.getPropertyValue(name).trim();
+    const palette = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6"].map(v);
+    const nf = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 });
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+    const money = (x) => (x == null ? "–" : `$ ${nf.format(x / 1e6)} M`);
+    const pct = (x) => (x == null ? "–" : `${(x * 100).toFixed(1).replace(".", ",")} %`);
+    const int = (x) => (x == null ? "–" : nf.format(x));
+
+    // ---------- KPIs
+    const L = D.latest;
+    const prev = D.monthly.length > 1 ? D.monthly[D.monthly.length - 2] : null;
+    // Variación vs. mes anterior: relativa para montos, en puntos porcentuales para tasas.
+    const delta = (cur, before, better = "up", kind = "rel") => {
+      if (cur == null || before == null || (kind === "rel" && before === 0)) return "";
+      const d = kind === "pp" ? cur - before : (cur - before) / Math.abs(before);
+      const good = better === "up" ? d >= 0 : d <= 0;
+      const size = (Math.abs(d) * 100).toFixed(1).replace(".", ",");
+      return `<small class="${good ? "up" : "down"}">${d >= 0 ? "▲" : "▼"} ${size} ${kind === "pp" ? "p.p." : "%"} vs. mes anterior</small>`;
+    };
+    const cards = [
+      ["Saldo total", money(L.saldo_total), `${int(L.obligaciones)} obligaciones`],
+      ["Saldo vencido", money(L.saldo_vencido), delta(L.saldo_vencido, prev?.saldo_vencido, "down")],
+      ["PAR30", pct(L.par30), delta(L.par30, prev?.par30, "down", "pp")],
+      ["PAR90", pct(L.par90), delta(L.par90, prev?.par90, "down", "pp")],
+      ["Recaudo del mes", money(L.recaudo), delta(L.recaudo, prev?.recaudo, "up")],
+      ["Tasa de recuperación", pct(L.tasa_recuperacion), delta(L.tasa_recuperacion, prev?.tasa_recuperacion, "up", "pp")],
+      ["Contactabilidad", pct(L.contactabilidad), `${int(L.gestiones)} gestiones`],
+      ["Efectividad de promesas", pct(L.efectividad_promesas), `${int(L.promesas_cumplidas)} de ${int(L.promesas_evaluables)} cumplidas`],
+    ];
+    document.getElementById("kpis").innerHTML = cards
+      .map(([t, val, sub]) => `<article class="kpi"><h2>${t}</h2><p>${val}</p>${sub.startsWith("<") ? sub : `<small>${sub}</small>`}</article>`)
+      .join("");
+
+    // ---------- Gráficos
+    if (window.Chart) {
+      Chart.defaults.color = v("--muted");
+      Chart.defaults.borderColor = v("--border");
+      Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+      const months = D.monthly.map((m) => m.anio_mes);
+      const pctAxis = { ticks: { callback: (x) => `${(x * 100).toLocaleString("es-CO", { maximumFractionDigits: 1 })} %` }, beginAtZero: true };
+      const tooltipPct = { callbacks: { label: (c) => `${c.dataset.label}: ${pct(c.parsed.y)}` } };
+
+      new Chart(document.getElementById("ch-recaudo"), {
+        data: {
+          labels: months,
+          datasets: [
+            { type: "bar", label: "Recaudo", data: D.monthly.map((m) => m.recaudo / 1e6), backgroundColor: palette[0], yAxisID: "y", borderRadius: 4 },
+            { type: "line", label: "Tasa de recuperación", data: D.monthly.map((m) => m.tasa_recuperacion), borderColor: palette[2], backgroundColor: palette[2], yAxisID: "y1", tension: 0.3 },
+          ],
+        },
+        options: {
+          maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+          scales: { y: { ticks: { callback: (x) => `$${nf.format(x)} M` } }, y1: { ...pctAxis, position: "right", grid: { drawOnChartArea: false } } },
+          plugins: { tooltip: { callbacks: { label: (c) => (c.dataset.yAxisID === "y1" ? `${c.dataset.label}: ${pct(c.parsed.y)}` : `${c.dataset.label}: $ ${nf.format(c.parsed.y)} M`) } } },
+        },
+      });
+
+      const buckets = Object.keys(D.buckets[0] || {}).filter((k) => k !== "anio_mes");
+      new Chart(document.getElementById("ch-franjas"), {
+        type: "bar",
+        data: { labels: D.buckets.map((b) => b.anio_mes), datasets: buckets.map((b, i) => ({ label: b, data: D.buckets.map((r) => r[b] / 1e6), backgroundColor: palette[i % palette.length] })) },
+        options: { maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: (x) => `$${nf.format(x)} M` } } }, plugins: { tooltip: { callbacks: { label: (c) => `${c.dataset.label}: $ ${nf.format(c.parsed.y)} M` } } } },
+      });
+
+      const lines = (id, series) =>
+        new Chart(document.getElementById(id), {
+          type: "line",
+          data: { labels: months, datasets: series.map(([label, key], i) => ({ label, data: D.monthly.map((m) => m[key]), borderColor: palette[i + 1], backgroundColor: palette[i + 1], tension: 0.3 })) },
+          options: { maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, scales: { y: pctAxis }, plugins: { tooltip: tooltipPct } },
+        });
+      lines("ch-par", [["PAR30", "par30"], ["PAR90", "par90"]]);
+      lines("ch-gestion", [["Contactabilidad", "contactabilidad"], ["Efectividad de promesas", "efectividad_promesas"]]);
+    }
+
+    // ---------- Roll rate
+    const accent = v("--accent-rgb");
+    document.getElementById("roll").innerHTML =
+      `<thead><tr><th class="text">Origen \\ Destino</th>${D.roll.destinations.map((d) => `<th>${esc(d)}</th>`).join("")}</tr></thead><tbody>` +
+      D.roll.origins.map((o, i) =>
+        `<tr><td class="text"><strong>${esc(o)}</strong></td>${D.roll.rates[i].map((r, j) =>
+          `<td class="cell" title="${int(D.roll.counts[i][j])} obligaciones" style="background: rgb(${accent} / ${(r * 0.85).toFixed(2)}); color: ${r > 0.55 ? "#fff" : "inherit"}">${r ? pct(r) : "·"}</td>`).join("")}</tr>`).join("") +
+      "</tbody>";
+
+    // ---------- Tablas
+    const table = (id, cols, rows, rowClass = () => "") => {
+      document.getElementById(id).innerHTML =
+        `<thead><tr>${cols.map(([h, , t]) => `<th class="${t ? "text" : ""}">${h}</th>`).join("")}</tr></thead><tbody>` +
+        rows.map((r) => `<tr class="${rowClass(r)}">${cols.map(([, f, t]) => `<td class="${t ? "text" : ""}">${f(r)}</td>`).join("")}</tr>`).join("") +
+        "</tbody>";
+    };
+    table("ranking", [
+      ["#", (r) => r.ranking], ["Gestor", (r) => `${esc(r.nombre)} <small>(${esc(r.equipo)})</small>`, true],
+      ["Gestiones", (r) => int(r.gestiones)], ["Contactab.", (r) => pct(r.contactabilidad)],
+      ["Promesas", (r) => int(r.promesas)], ["Efectividad", (r) => pct(r.efectividad_promesas)],
+      ["Recaudo", (r) => money(r.recaudo_promesas)],
+    ], D.ranking);
+    table("products", [
+      ["Producto", (r) => esc(r.producto), true], ["Obligaciones", (r) => int(r.obligaciones)],
+      ["Saldo", (r) => money(r.saldo_total)], ["PAR30", (r) => pct(r.par30)],
+    ], D.products);
+    table("channels", [
+      ["Canal", (r) => esc(r.canal_pago), true], ["Pagos", (r) => int(r.pagos)],
+      ["Recaudo", (r) => money(r.recaudo)], ["Participación", (r) => pct(r.participacion)],
+    ], D.channels);
+    table("quality", [
+      ["Dataset", (r) => esc(r.dataset), true], ["Regla", (r) => `<code>${esc(r.regla)}</code>`, true],
+      ["Descripción", (r) => esc(r.descripcion), true], ["Severidad", (r) => esc(r.severidad), true],
+      ["Revisados", (r) => int(r.revisados)], ["Fallidos", (r) => int(r.fallidos)], ["Cumplimiento", (r) => pct(r.cumplimiento)],
+    ], [...D.quality].sort((a, b) => b.fallidos - a.fallidos), (r) => (r.fallidos > 0 ? "fail" : ""));
+    const rej = Object.entries(D.rejected);
+    document.getElementById("rejected-summary").textContent = rej.length
+      ? `Registros enviados a cuarentena: ${rej.map(([k, n]) => `${k} ${int(n)}`).join(" · ")}. Detalle en la hoja "Rechazados" del Excel.`
+      : "Ningún registro fue rechazado en esta ejecución.";
+  </script>
+</body>
+</html>
