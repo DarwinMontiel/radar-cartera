@@ -12,7 +12,7 @@ body:
     id: steps
     attributes:
       label: Pasos para reproducir
-      placeholder: "1. cartera generate --seed 42\n2. cartera run ..."
+      placeholder: "1. cartera generate --seed 42\n2. cartera run --as-of 2026-08-31 ..."
     validations: { required: true }
   - type: textarea
     id: manifest

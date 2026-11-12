@@ -23,6 +23,9 @@ integration: ## Pruebas contra PostgreSQL (requiere CARTERA_DATABASE_URL)
 data: ## Genera exportes sintéticos en data/raw
 	cartera generate --out data/raw
 
+muestra: ## Regenera la muestra pública data/muestra (semilla 42, 300 clientes, 6 cortes)
+	cartera generate --out data/muestra --seed 42 --clients 300 --months 6
+
 demo: data ## Pipeline completo con DW en SQLite; abre reports/index.html
 	cartera run --raw data/raw --out reports --db $(DB)
 
@@ -33,4 +36,4 @@ dw: ## Levanta PostgreSQL y corre el pipeline en Docker
 ddl: ## Imprime el DDL de PostgreSQL
 	cartera ddl --dialect postgresql
 
-.PHONY: help install lint test integration data demo dw ddl
+.PHONY: help install lint test integration data muestra demo dw ddl

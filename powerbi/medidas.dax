@@ -1,5 +1,5 @@
 // =====================================================================================
-//  Medidas DAX del modelo "Cartera & Cobranza"
+//  Medidas DAX del modelo "Radar de Cartera"
 //  Modelo: esquema estrella cargado por radar-cartera (ver powerbi/README.md).
 //  Las definiciones replican docs/kpis.md y las vistas sql/views.sql: los números de
 //  Power BI, del reporte Excel y del tablero HTML deben coincidir.

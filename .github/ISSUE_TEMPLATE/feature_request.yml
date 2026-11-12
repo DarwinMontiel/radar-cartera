@@ -1,12 +1,12 @@
 name: Nueva funcionalidad
-description: Proponer un bot, una mejora o una integración
+description: Proponer un KPI, una regla de calidad, un reporte o una integración
 labels: [enhancement]
 body:
   - type: textarea
     id: problem
     attributes:
       label: Problema u oportunidad
-      description: ¿Qué proceso manual o dolor operativo resuelve?
+      description: ¿Qué pregunta del negocio o dolor operativo de cobranza resuelve?
     validations: { required: true }
   - type: textarea
     id: proposal

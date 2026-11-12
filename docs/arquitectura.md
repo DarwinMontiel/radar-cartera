@@ -35,7 +35,37 @@ flowchart LR
 | Carga | `warehouse.py` | DDL con SQLAlchemy, carga transaccional idempotente y vistas SQL. |
 | KPIs | `kpis.py` | Indicadores mensuales, franjas, roll rates, ranking, producto, canal. |
 | Reportes | `report_excel.py`, `report_html.py` | Excel con tablas, gráficos y formato condicional; tablero HTML. |
-| Orquestación | `pipeline.py`, `cli.py` | Pasos cronometrados, manifiesto de ejecución, CLI. |
+| Orquestación | `pipeline.py`, `cli.py` | Alcance por fecha de corte, pasos cronometrados, manifiesto de ejecución, CLI. |
+| Formato | `formato.py` | Montos y porcentajes en formato colombiano (`$ 1.234.567`, `9,3 %`) sin depender de `locale`. |
+
+## Una ejecución, paso a paso
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor A as Analista de cartera
+    participant CLI as cartera run
+    participant P as pipeline.py
+    participant Q as quality.py
+    participant DW as PostgreSQL
+    participant R as Reportes
+
+    A->>CLI: --raw data/raw --as-of 2026-10-31
+    CLI->>P: run_pipeline()
+    P->>P: extraer (todo como texto) y limpiar
+    P->>P: recortar al corte (lo posterior queda fuera de alcance)
+    P->>Q: validate_all(datos, corte)
+    Q-->>P: válidos + reporte de calidad + cuarentena
+    P->>P: modelo estrella y evaluación de promesas
+    opt con --db o CARTERA_DATABASE_URL
+        P->>DW: full refresh en una transacción + vistas
+        DW-->>P: filas cargadas por tabla
+    end
+    P->>P: KPIs del último corte válido
+    P->>R: Excel, tablero HTML, rechazados.csv, kpi_mensual.csv
+    P->>R: manifest.json (filas por etapa, tiempos, rechazos)
+    CLI-->>A: resumen con $ 15.217.214.500 · PAR30 11,4 %
+```
 
 ## Modelo dimensional
 
@@ -89,8 +119,10 @@ erDiagram
   comparar cortes y calcular roll rates.
 - `fact_pagos` y `fact_gestiones` son hechos **transaccionales**.
 - `fact_promesas` es un hecho **derivado**: el pipeline cruza cada promesa con los pagos de su
-  ventana y precalcula `valor_pagado`, `evaluable` y `cumplida`, para que Power BI no tenga
-  que hacer ese cruce costoso en DAX.
+  ventana (cada pago se atribuye a una sola promesa, por *último toque*; ver
+  [kpis.md](kpis.md#un-pago-una-sola-promesa-atribución-por-último-toque)) y precalcula
+  `valor_pagado`, `evaluable` y `cumplida`, para que Power BI no tenga que hacer ese cruce
+  costoso en DAX.
 - El DDL completo para PostgreSQL se obtiene con `cartera ddl --dialect postgresql`.
 
 ## Decisiones

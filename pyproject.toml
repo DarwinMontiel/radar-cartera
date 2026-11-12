@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "radar-cartera"
-version = "1.0.0"
-description = "Pipeline ETL y analítica de cartera y cobranzas: calidad de datos, modelo estrella en PostgreSQL, KPIs, Power BI y reportes Excel."
+version = "1.1.0"
+description = "Radar de Cartera: ETL y analítica de cartera y cobranzas con calidad de datos, modelo estrella en PostgreSQL, KPIs, Power BI y reportes Excel."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 authors = [{ name = "Darwin Montiel Mora", email = "darwinmontielm@gmail.com" }]
-keywords = ["etl", "pandas", "postgresql", "power-bi", "dax", "data-quality", "cobranzas"]
+keywords = ["etl", "pandas", "postgresql", "power-bi", "dax", "calidad-de-datos", "cartera", "cobranza"]
 dependencies = [
     "pandas>=2.2",
     "numpy>=1.26",
