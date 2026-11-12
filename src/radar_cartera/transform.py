@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import unicodedata
+from dataclasses import fields
+from datetime import date
 
 import numpy as np
 import pandas as pd
@@ -153,6 +155,42 @@ def clean_all(raw: RawData) -> RawData:
         pagos=clean_pagos(raw.pagos),
         gestiones=clean_gestiones(raw.gestiones),
     )
+
+
+SCOPED_DATES: dict[str, str] = {
+    "obligaciones": "fecha_desembolso",
+    "cortes": "fecha_corte",
+    "pagos": "fecha_pago",
+    "gestiones": "fecha_gestion",
+}
+
+
+def scope_to_cut(data: RawData, as_of: date) -> tuple[RawData, dict[str, int]]:
+    """Recorta los exportes a lo que se conocía en la fecha de corte ``as_of``.
+
+    Sirve para reprocesar un mes pasado con exportes más recientes. Un registro fechado entre
+    ``as_of`` y el último corte del exporte no es un error, sino un hecho que todavía no había
+    ocurrido; por eso queda *fuera de alcance* y no va a cuarentena. Lo que tenga fecha posterior
+    al último corte del exporte sí es una fecha futura: se conserva para que lo rechacen las
+    reglas de calidad. Las fechas vacías también se conservan por la misma razón.
+
+    Devuelve los datos recortados y cuántas filas quedaron fuera de alcance por dataset.
+    """
+    data_cut = data.cortes["fecha_corte"].max()
+    limit = pd.Timestamp(as_of)
+    if pd.isna(data_cut) or limit >= data_cut:
+        return data, {}
+
+    frames: dict[str, pd.DataFrame] = {f.name: getattr(data, f.name) for f in fields(data)}
+    excluded: dict[str, int] = {}
+    for name, column in SCOPED_DATES.items():
+        frame = frames[name]
+        day = frame[column].dt.normalize()
+        later = (day > limit) & (day <= data_cut)
+        if later.any():
+            excluded[name] = int(later.sum())
+            frames[name] = frame[~later].reset_index(drop=True)
+    return RawData(**frames), excluded
 
 
 def month_label(dates: pd.Series) -> pd.Series:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from datetime import date
 from pathlib import Path
 
 import pandas as pd
@@ -11,7 +12,7 @@ import pytest
 from openpyxl import load_workbook
 from sqlalchemy import Engine, create_engine, inspect
 
-from radar_cartera.pipeline import PipelineResult
+from radar_cartera.pipeline import PipelineResult, run_pipeline
 from radar_cartera.warehouse import VIEWS, ddl, load, read_view
 
 KPI_COLUMNS = [
@@ -160,3 +161,46 @@ def test_ddl_for_postgres() -> None:
     assert "CREATE TABLE fact_cartera" in script
     assert "NUMERIC(18, 2)" in script
     assert "PRIMARY KEY (corte_key, obligacion_key)" in script
+
+
+def test_as_of_reprocesses_a_past_month(
+    pipeline_run: Run, raw_dir: Path, synthetic, tmp_path: Path  # type: ignore[no-untyped-def]
+) -> None:
+    """--as-of en un mes intermedio: mismo corte y recaudo que la corrida completa para ese mes.
+
+    Los pagos y gestiones posteriores al corte pedido quedan fuera de alcance (no son errores),
+    y las fechas futuras de verdad (posteriores al último corte del exporte) se siguen rechazando.
+    """
+    full, _, _ = pipeline_run
+    result = run_pipeline(raw_dir, tmp_path, as_of=date(2026, 9, 30))
+    assert result.kpis is not None
+    assert result.quality is not None
+    assert full.kpis is not None
+
+    assert result.kpis.month == "2026-09"
+    assert (tmp_path / "reporte_cartera_2026-09.xlsx").exists()
+    assert result.kpis.monthly["anio_mes"].iloc[-1] == "2026-09"
+
+    expected = full.kpis.monthly.set_index("anio_mes").loc["2026-09"]
+    assert result.kpis.latest["saldo_total"] == pytest.approx(expected["saldo_total"])
+    assert result.kpis.latest["recaudo"] == pytest.approx(expected["recaudo"])
+    assert result.kpis.latest["recaudo"] > 0
+
+    motivos = result.quality.rejected_frame().groupby("motivo").size()
+    assert motivos.get("fecha_pago_invalida", 0) == 0
+    assert motivos.get("fecha_gestion_invalida", 0) == synthetic.anomalies["gestiones_fecha_futura"]
+
+    manifest = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["as_of"] == "2026-09-30"
+    scoped = manifest["rows_out_of_scope"]
+    assert scoped["cortes"] > 0
+    assert scoped["pagos"] > 0
+    assert (
+        manifest["rows_in"]["pagos"]
+        == manifest["rows_valid"]["pagos"] + manifest["rows_rejected"]["pagos"] + scoped["pagos"]
+    )
+
+
+def test_as_of_before_second_cut_fails_with_clear_message(raw_dir: Path, tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="corte anterior"):
+        run_pipeline(raw_dir, tmp_path, as_of=date(2026, 7, 31))

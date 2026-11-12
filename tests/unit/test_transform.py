@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+
 import pandas as pd
 import pytest
 
@@ -11,6 +13,7 @@ from radar_cartera.transform import (
     normalize_resultado,
     parse_dates,
     parse_money,
+    scope_to_cut,
 )
 
 
@@ -75,3 +78,25 @@ def test_parse_dates_mixed_formats() -> None:
 )  # fmt: skip
 def test_aging_bucket_boundaries(dias: int, bucket: str) -> None:
     assert aging_bucket(pd.Series([dias])).iloc[0] == bucket
+
+
+def test_scope_to_cut_excludes_later_records_but_keeps_future_ones() -> None:
+    from tests.conftest import tiny_data
+
+    data = tiny_data()
+    # Pago posterior al último corte del exporte (31-oct): es una fecha futura, no se recorta.
+    data.pagos.loc[len(data.pagos)] = ["P3", "OB2", pd.Timestamp("2026-12-01"), 50.0, "PSE"]
+    scoped, excluded = scope_to_cut(data, date(2026, 9, 30))
+    assert excluded == {"cortes": 2, "pagos": 1, "gestiones": 3}
+    assert scoped.cortes["fecha_corte"].max() == pd.Timestamp("2026-09-30")
+    assert scoped.pagos["id_pago"].tolist() == ["P1", "P3"]
+    assert scoped.gestiones.empty
+
+
+def test_scope_to_cut_is_a_no_op_at_the_last_cut() -> None:
+    from tests.conftest import AS_OF, tiny_data
+
+    data = tiny_data()
+    scoped, excluded = scope_to_cut(data, AS_OF)
+    assert excluded == {}
+    assert scoped is data

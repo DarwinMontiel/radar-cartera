@@ -13,6 +13,7 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, TypeVar
 
+import pandas as pd
 from sqlalchemy import create_engine
 
 from radar_cartera import __version__
@@ -22,7 +23,7 @@ from radar_cartera.model import StarSchema, build_model
 from radar_cartera.quality import QualityReport, validate_all
 from radar_cartera.report_excel import write_excel
 from radar_cartera.report_html import write_html
-from radar_cartera.transform import clean_all
+from radar_cartera.transform import clean_all, scope_to_cut
 from radar_cartera.warehouse import load
 
 log = logging.getLogger("radar_cartera")
@@ -38,6 +39,7 @@ class PipelineResult:
     steps: dict[str, float] = field(default_factory=dict)
     rows_in: dict[str, int] = field(default_factory=dict)
     rows_valid: dict[str, int] = field(default_factory=dict)
+    rows_out_of_scope: dict[str, int] = field(default_factory=dict)
     rows_loaded: dict[str, int] = field(default_factory=dict)
     outputs: dict[str, str] = field(default_factory=dict)
     quality: QualityReport | None = None
@@ -57,6 +59,7 @@ class PipelineResult:
             "rows_in": self.rows_in,
             "rows_valid": self.rows_valid,
             "rows_rejected": self.quality.rejected_by_dataset() if self.quality else {},
+            "rows_out_of_scope": self.rows_out_of_scope,
             "rows_loaded": self.rows_loaded,
             "outputs": self.outputs,
         }
@@ -89,14 +92,24 @@ def run_pipeline(
     raw: RawData = read_raw(raw_dir)
     cleaned = clean_all(raw)
     cut = as_of or cleaned.cortes["fecha_corte"].max().date()
+    # Reproceso de un mes pasado: lo posterior al corte pedido queda fuera de alcance, no en
+    # cuarentena (ver transform.scope_to_cut).
+    scoped, out_of_scope = scope_to_cut(cleaned, cut)
     result = PipelineResult(run_id=run_id, as_of=cut, started_at=started)
     result.rows_in = raw.row_counts()
+    result.rows_out_of_scope = out_of_scope
     result.steps["extraccion_y_limpieza"] = round(time.perf_counter() - t0, 3)
     log.info("paso=extraccion_y_limpieza estado=fin run=%s filas=%s", run_id, result.rows_in)
+    if out_of_scope:
+        log.info("alcance corte=%s fuera_de_alcance=%s", cut.isoformat(), out_of_scope)
 
-    validated, quality = _timed(result, "validacion", lambda: validate_all(cleaned, cut))
+    validated, quality = _timed(result, "validacion", lambda: validate_all(scoped, cut))
     result.quality = quality
     result.rows_valid = validated.row_counts()
+    last_cut = validated.cortes["fecha_corte"].max()
+    if pd.isna(last_cut):
+        raise ValueError(f"No hay cortes de cartera válidos hasta el {cut:%Y-%m-%d}.")
+    month = f"{last_cut:%Y-%m}"
 
     model = _timed(result, "modelado", lambda: build_model(validated, cut))
     result.model = model
@@ -108,7 +121,7 @@ def run_pipeline(
         finally:
             engine.dispose()
 
-    kpis = _timed(result, "kpis", lambda: compute_all(model))
+    kpis = _timed(result, "kpis", lambda: compute_all(model, month))
     result.kpis = kpis
 
     output_dir.mkdir(parents=True, exist_ok=True)
