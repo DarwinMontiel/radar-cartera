@@ -1,4 +1,9 @@
-"""Tablero HTML autocontenido (Chart.js) publicado en GitHub Pages por el pipeline de CI."""
+"""Tablero HTML de un solo archivo publicado en GitHub Pages por el pipeline de CI.
+
+Datos, estilos y lógica van embebidos en el HTML; solo Chart.js se carga desde jsDelivr (versión
+fija y con integridad SRI). Sin conexión, el tablero muestra los indicadores y las tablas y avisa
+que los gráficos no están disponibles.
+"""
 
 from __future__ import annotations
 

@@ -1,8 +1,9 @@
 """Motor de reglas de calidad de datos.
 
 Cada regla devuelve una máscara booleana (True = el registro cumple). Las reglas con
-severidad ``reject`` envían el registro a cuarentena con el motivo; las ``warn`` solo se
-reportan. El resultado es un reporte auditable de qué se revisó y qué se descartó.
+severidad *rechazo* (``reject``) envían el registro a cuarentena con el motivo; las de
+severidad *alerta* (``warn``) solo se reportan. El resultado es un reporte auditable de qué se
+revisó y qué se descartó.
 """
 
 from __future__ import annotations
@@ -25,6 +26,8 @@ from radar_cartera.extract import RawData
 
 Check = Callable[[pd.DataFrame], pd.Series]
 Severity = Literal["reject", "warn"]
+# Los identificadores internos quedan en inglés; lo que ven las personas, en español.
+SEVERIDAD: dict[str, str] = {"reject": "rechazo", "warn": "alerta"}
 
 
 @dataclass(frozen=True)
@@ -58,10 +61,10 @@ class QualityReport:
         return pd.DataFrame(
             [
                 {
-                    "dataset": r.dataset,
+                    "conjunto": r.dataset,
                     "regla": r.rule,
                     "descripcion": r.description,
-                    "severidad": r.severity,
+                    "severidad": SEVERIDAD[r.severity],
                     "revisados": r.checked,
                     "fallidos": r.failed,
                     "cumplimiento": round(r.pass_rate, 4),
@@ -72,12 +75,12 @@ class QualityReport:
 
     def rejected_frame(self) -> pd.DataFrame:
         if not self.rejected:
-            return pd.DataFrame(columns=["dataset", "motivo", "registro"])
+            return pd.DataFrame(columns=["conjunto", "motivo", "registro"])
         return pd.concat(self.rejected, ignore_index=True)
 
     def rejected_by_dataset(self) -> dict[str, int]:
         frame = self.rejected_frame()
-        counts = frame.groupby("dataset").size() if len(frame) else pd.Series(dtype="int64")
+        counts = frame.groupby("conjunto").size() if len(frame) else pd.Series(dtype="int64")
         return {str(k): int(v) for k, v in counts.items()}
 
     @property
@@ -108,7 +111,7 @@ def apply_rules(
         report.rejected.append(
             pd.DataFrame(
                 {
-                    "dataset": dataset,
+                    "conjunto": dataset,
                     "motivo": reasons[~keep].to_numpy(),
                     "registro": rejected.astype("string")
                     .to_json(orient="records", lines=True, force_ascii=False)

@@ -214,7 +214,7 @@ def _quality(wb: Workbook, quality: QualityReport, subtitle: str) -> None:
     _header(ws, "Reglas de calidad aplicadas en la carga", subtitle)
     frame = quality.to_frame()
     columns = {
-        "dataset": ("Dataset", "@"),
+        "conjunto": ("Conjunto de datos", "@"),
         "regla": ("Regla", "@"),
         "descripcion": ("Descripción", "@"),
         "severidad": ("Severidad", "@"),
@@ -234,7 +234,7 @@ def _quality(wb: Workbook, quality: QualityReport, subtitle: str) -> None:
     rejected = quality.rejected_frame().head(5000)
     rs = wb.create_sheet("Rechazados")
     _header(rs, "Registros en cuarentena (máx. 5.000)", subtitle)
-    cols = {"dataset": ("Dataset", "@"), "motivo": ("Motivo", "@"), "registro": ("Registro", "@")}
+    cols = {"conjunto": ("Conjunto de datos", "@"), "motivo": ("Motivo", "@"), "registro": ("Registro", "@")}
     _write_table(rs, rejected, cols, top=4, name="Rechazados")
     rs.column_dimensions["B"].width = 26
     rs.column_dimensions["C"].width = 120

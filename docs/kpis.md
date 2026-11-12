@@ -63,13 +63,13 @@ sintéticos (lo atribuido a promesas nunca supera lo pagado por obligación).
 ```mermaid
 stateDiagram-v2
     direction LR
-    [*] --> Pactada: gestión con resultado<br/>"Promesa de pago"
+    [*] --> Pactada: gestión con resultado "Promesa de pago"
     Pactada --> EnVentana: fecha y valor registrados
-    EnVentana --> EnVentana: llega un pago de la obligación<br/>(se atribuye por último toque)
-    EnVentana --> Pendiente: corte antes de<br/>fecha pactada + 3 días
+    EnVentana --> EnVentana: llega un pago de la obligación (se atribuye por último toque)
+    EnVentana --> Pendiente: corte antes de fecha pactada + 3 días
     Pendiente --> EnVentana: siguiente corte
-    EnVentana --> Cumplida: ventana cerrada y<br/>pagado ≥ 90 % de lo prometido
-    EnVentana --> Incumplida: ventana cerrada y<br/>pagado < 90 %
+    EnVentana --> Cumplida: ventana cerrada y pagado ≥ 90 % de lo prometido
+    EnVentana --> Incumplida: ventana cerrada y pagado < 90 %
     Cumplida --> [*]
     Incumplida --> [*]
 

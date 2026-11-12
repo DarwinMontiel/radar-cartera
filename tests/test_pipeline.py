@@ -37,7 +37,7 @@ def test_all_injected_anomalies_are_quarantined(pipeline_run: Run, synthetic) ->
     assert result.quality.total_rejected == sum(synthetic.anomalies.values())
     rejected = pd.read_csv(out / "rechazados.csv")
     assert len(rejected) == result.quality.total_rejected
-    by_reason = rejected.groupby(["dataset", "motivo"]).size()
+    by_reason = rejected.groupby(["conjunto", "motivo"]).size()
     expected = {
         "clientes_duplicados": ("clientes", "cliente_duplicado"),
         "cortes_saldo_negativo": ("cortes", "saldo_negativo"),
@@ -143,6 +143,10 @@ def test_html_report_embeds_valid_json(pipeline_run: Run) -> None:
     assert payload["month"] == payload["monthly"][-1]["anio_mes"]
     assert payload["roll"]["destinations"][-1] == "Salida de cartera"
     assert "chart.js@4.4.1" in html
+    assert 'integrity="sha384-' in html  # CDN con versión fija e integridad SRI
+    assert 'href="rechazados.csv"' in html
+    assert (out / "rechazados.csv").exists()
+    assert {q["severidad"] for q in payload["quality"]} == {"rechazo", "alerta"}
 
 
 def test_manifest_traces_the_run(pipeline_run: Run) -> None:

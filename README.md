@@ -102,7 +102,7 @@ Salida:
 reports/
 ├── index.html                    # tablero
 ├── reporte_cartera_2026-10.xlsx  # reporte gerencial
-├── rechazados.csv                # cuarentena: dataset, motivo, registro original
+├── rechazados.csv                # cuarentena: conjunto, motivo, registro original
 ├── kpi_mensual.csv
 └── manifest.json                 # trazabilidad: filas por etapa, tiempos, rechazos
 ```

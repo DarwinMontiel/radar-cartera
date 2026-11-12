@@ -34,6 +34,8 @@ def test_warn_rules_are_reported_but_keep_rows() -> None:
     assert len(apply_rules(df, "pagos", [rule], report)) == 2
     assert report.results[0].failed == 1
     assert report.total_rejected == 0
+    # La severidad se muestra en español en el tablero, el Excel y la documentación.
+    assert report.to_frame()["severidad"].tolist() == ["alerta"]
 
 
 def test_validate_all_enforces_referential_integrity() -> None:
@@ -62,7 +64,7 @@ def test_future_dated_and_incomplete_promises_are_rejected() -> None:
     valid, report = validate_all(data, AS_OF)
 
     reasons = dict(
-        zip(report.rejected_frame()["motivo"], report.rejected_frame()["dataset"], strict=True)
+        zip(report.rejected_frame()["motivo"], report.rejected_frame()["conjunto"], strict=True)
     )
     assert set(reasons) == {"fecha_gestion_invalida", "promesa_incompleta"}
     assert valid.gestiones["id_gestion"].tolist() == ["GS1"]

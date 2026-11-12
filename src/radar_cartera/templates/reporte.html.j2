@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tablero de Cartera</title>
+  <title>Radar de Cartera</title>
   <meta name="description" content="Tablero analítico de cartera y cobranza: saldo, mora, recaudo, roll rates, gestores y calidad de datos.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230d9488'/><path d='M8 22V12m6 10V8m6 14v-6m6 6V14' stroke='white' stroke-width='3' stroke-linecap='round'/></svg>">
   <style>
@@ -31,6 +31,14 @@
     .actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .badge { background: #334155; color: #e2e8f0; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
     .btn { background: #0d9488; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; }
+    .btn.ghost { background: transparent; border: 1px solid #3b5566; color: #e2e8f0; }
+    .comite { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; }
+    .luz { width: 44px; height: 44px; border-radius: 50%; border: 4px solid var(--border); }
+    .luz.verde { background: #16a34a; } .luz.amarillo { background: #f59e0b; } .luz.rojo { background: #dc2626; }
+    .comite ul { margin: 6px 0 0; padding-left: 18px; } .comite li { margin: 3px 0; }
+    .aviso { margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); border: 1px dashed var(--border); color: var(--muted); font-size: 13px; }
+    .sev { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--border); }
+    .sev.rechazo { color: var(--err); border-color: currentColor; }
     main { max-width: 1280px; margin: 0 auto; padding: 24px; display: grid; gap: 20px; }
     .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
     @media (min-width: 1100px) { .kpis { grid-template-columns: repeat(4, 1fr); } }
@@ -60,17 +68,26 @@
 <body>
   <header>
     <div>
-      <h1>Cartera &amp; Cobranza · Tablero analítico</h1>
+      <h1>Radar de Cartera · Cartera y cobranza</h1>
       <p>Corte {{ month }} · generado {{ run.generated[:16] | replace("T", " ") }} · v{{ run.version }}</p>
     </div>
     <div class="actions">
       <span class="badge">Datos sintéticos</span>
+      <a class="btn ghost" href="rechazados.csv" download>Descargar rechazados (CSV)</a>
       {% if run.excel %}<a class="btn" href="{{ run.excel }}" download>Descargar reporte Excel</a>{% endif %}
     </div>
   </header>
 
   <main>
     <section class="kpis" id="kpis" aria-label="Indicadores del mes"></section>
+
+    <section class="panel" aria-labelledby="comite-titulo">
+      <h2 id="comite-titulo">Lectura para el comité de cartera · {{ month }}</h2>
+      <p class="hint">Semáforo según la variación del PAR30 frente al corte anterior: verde si baja o se mantiene, amarillo si sube hasta 0,5 p.p., rojo si sube más.</p>
+      <div class="comite"><div class="luz" id="luz" role="img" aria-label="Semáforo"></div><ul id="comite"></ul></div>
+    </section>
+
+    <p class="aviso" id="sin-graficos" hidden>No se pudieron cargar los gráficos (Chart.js se descarga de jsDelivr y parece no haber conexión). Los indicadores y las tablas siguen disponibles.</p>
 
     <section class="charts">
       <article class="panel"><h2>Recaudo mensual</h2><p class="hint">Barras: recaudo (COP millones) · Línea: tasa de recuperación sobre el saldo vencido del corte anterior</p><div class="chart"><canvas id="ch-recaudo"></canvas></div></article>
@@ -110,7 +127,7 @@
   </footer>
 
   <script id="payload" type="application/json">{{ data }}</script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js" integrity="sha384-dug+JxfBvklEQdJ4AYuBBAIScUz0bVN73xpy273gcAwHjb3qI0fXmuYNaNfdyYJG" crossorigin="anonymous"></script>
   <script>
     const D = JSON.parse(document.getElementById("payload").textContent);
     const css = getComputedStyle(document.documentElement);
@@ -147,8 +164,41 @@
       .map(([t, val, sub]) => `<article class="kpi"><h2>${t}</h2><p>${val}</p>${sub.startsWith("<") ? sub : `<small>${sub}</small>`}</article>`)
       .join("");
 
+    // ---------- Lectura para el comité (solo datos del propio tablero, sin cifras inventadas)
+    const pp = (x) => `${(Math.abs(x) * 100).toFixed(1).replace(".", ",")} p.p.`;
+    const notas = [];
+    let luz = "verde";
+    if (prev && L.par30 != null && prev.par30 != null) {
+      const d = L.par30 - prev.par30;
+      luz = d <= 0 ? "verde" : d <= 0.005 ? "amarillo" : "rojo";
+      notas.push(d === 0 ? `El PAR30 se mantuvo en ${pct(L.par30)}.` : `El PAR30 ${d > 0 ? "subió" : "bajó"} ${pp(d)} y cierra en ${pct(L.par30)}.`);
+    } else {
+      notas.push(`El PAR30 cierra en ${pct(L.par30)} (no hay corte anterior para comparar).`);
+    }
+    const iCura = D.roll.origins.indexOf("1-30");
+    const jAlDia = D.roll.destinations.indexOf("Al día");
+    if (iCura >= 0 && jAlDia >= 0 && D.roll.counts[iCura].some((n) => n > 0)) {
+      notas.push(`De la franja 1-30 del corte anterior, el ${pct(D.roll.rates[iCura][jAlDia])} volvió a estar al día.`);
+    }
+    if (prev && prev.recaudo) {
+      const r = (L.recaudo - prev.recaudo) / prev.recaudo;
+      notas.push(`El recaudo del mes fue ${money(L.recaudo)}, un ${pct(Math.abs(r))} ${r >= 0 ? "más" : "menos"} que el mes anterior.`);
+    }
+    if (L.promesas_evaluables) {
+      notas.push(`Se cumplieron ${int(L.promesas_cumplidas)} de ${int(L.promesas_evaluables)} promesas evaluables (${pct(L.efectividad_promesas)}).`);
+    }
+    const totalRechazados = Object.values(D.rejected).reduce((a, n) => a + n, 0);
+    notas.push(totalRechazados ? `${int(totalRechazados)} registros quedaron en cuarentena; el detalle está en «Descargar rechazados».` : "Ningún registro quedó en cuarentena.");
+    const luzEl = document.getElementById("luz");
+    luzEl.className = `luz ${luz}`;
+    luzEl.setAttribute("aria-label", `Semáforo en ${luz}`);
+    document.getElementById("comite").innerHTML = notas.map((n) => `<li>${esc(n)}</li>`).join("");
+
     // ---------- Gráficos
-    if (window.Chart) {
+    if (!window.Chart) {
+      document.getElementById("sin-graficos").hidden = false;
+      document.querySelectorAll(".chart").forEach((el) => { el.closest(".panel").hidden = true; });
+    } else {
       Chart.defaults.color = v("--muted");
       Chart.defaults.borderColor = v("--border");
       Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
@@ -201,7 +251,9 @@
     const table = (id, cols, rows, rowClass = () => "") => {
       document.getElementById(id).innerHTML =
         `<thead><tr>${cols.map(([h, , t]) => `<th class="${t ? "text" : ""}">${h}</th>`).join("")}</tr></thead><tbody>` +
-        rows.map((r) => `<tr class="${rowClass(r)}">${cols.map(([, f, t]) => `<td class="${t ? "text" : ""}">${f(r)}</td>`).join("")}</tr>`).join("") +
+        (rows.length
+          ? rows.map((r) => `<tr class="${rowClass(r)}">${cols.map(([, f, t]) => `<td class="${t ? "text" : ""}">${f(r)}</td>`).join("")}</tr>`).join("")
+          : `<tr><td class="text" colspan="${cols.length}">Sin datos para este corte.</td></tr>`) +
         "</tbody>";
     };
     table("ranking", [
@@ -219,13 +271,13 @@
       ["Recaudo", (r) => money(r.recaudo)], ["Participación", (r) => pct(r.participacion)],
     ], D.channels);
     table("quality", [
-      ["Dataset", (r) => esc(r.dataset), true], ["Regla", (r) => `<code>${esc(r.regla)}</code>`, true],
-      ["Descripción", (r) => esc(r.descripcion), true], ["Severidad", (r) => esc(r.severidad), true],
+      ["Conjunto de datos", (r) => esc(r.conjunto), true], ["Regla", (r) => `<code>${esc(r.regla)}</code>`, true],
+      ["Descripción", (r) => esc(r.descripcion), true], ["Severidad", (r) => `<span class="sev ${esc(r.severidad)}">${esc(r.severidad)}</span>`, true],
       ["Revisados", (r) => int(r.revisados)], ["Fallidos", (r) => int(r.fallidos)], ["Cumplimiento", (r) => pct(r.cumplimiento)],
     ], [...D.quality].sort((a, b) => b.fallidos - a.fallidos), (r) => (r.fallidos > 0 ? "fail" : ""));
     const rej = Object.entries(D.rejected);
     document.getElementById("rejected-summary").textContent = rej.length
-      ? `Registros enviados a cuarentena: ${rej.map(([k, n]) => `${k} ${int(n)}`).join(" · ")}. Detalle en la hoja "Rechazados" del Excel.`
+      ? `Registros enviados a cuarentena: ${rej.map(([k, n]) => `${k} ${int(n)}`).join(" · ")}. Detalle en «Descargar rechazados» o en la hoja "Rechazados" del Excel.`
       : "Ningún registro fue rechazado en esta ejecución.";
   </script>
 </body>
