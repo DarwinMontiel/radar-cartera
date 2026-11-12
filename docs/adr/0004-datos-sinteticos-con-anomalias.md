@@ -21,6 +21,12 @@ Un generador (`synthetic.py`) reproducible por semilla que:
   duplicados por doble exportación, referencias huérfanas y fechas futuras.
 - **Registra cuántas anomalías inyectó de cada tipo**, lo que permite exigir en las pruebas que
   el pipeline las detecte todas, ni una más ni una menos.
+- Genera los documentos de identidad en un **rango ficticio** (prefijo `99`, de 9 o 10 dígitos:
+  990.000.000-999.999.999 y 9.900.000.000-9.999.999.999). Siguen pasando la regla de formato
+  (6 a 10 dígitos), pero quedan fuera de la numeración de cédulas colombianas. Así ningún
+  nombre de la muestra pública puede quedar asociado al documento de una persona real dentro de
+  un archivo de cartera en mora. Una prueba (`test_documents_are_in_a_fictitious_range`) lo
+  garantiza.
 
 ## Consecuencias
 

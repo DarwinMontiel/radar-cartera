@@ -28,6 +28,12 @@ def test_clean_data_is_referentially_consistent() -> None:
     assert (data.pagos["valor"] > 0).all()
 
 
+def test_documents_are_in_a_fictitious_range() -> None:
+    """Los documentos sintéticos no deben caer en la numeración de cédulas reales."""
+    docs = generate(SyntheticConfig(seed=11, clients=500, months=3)).clientes["documento"]
+    assert docs.str.fullmatch(r"99\d{7,8}").all()
+
+
 def test_dirty_exports_inject_logged_anomalies(synthetic) -> None:  # type: ignore[no-untyped-def]
     assert sum(synthetic.anomalies.values()) > 0
     as_text = synthetic.pagos["valor"].map(lambda v: isinstance(v, str))

@@ -63,6 +63,10 @@ GESTORES = [
 
 MAX_CUOTAS_VENCIDAS = 8
 
+# Rangos [inicio, fin) de documentos ficticios: 9.900.000.000-9.999.999.999 y 990.000.000-999.999.999.
+DOC_FICTICIO_10 = (9_900_000_000, 10_000_000_000)
+DOC_FICTICIO_9 = (990_000_000, 1_000_000_000)
+
 
 @dataclass(frozen=True)
 class _Obligacion:
@@ -138,9 +142,12 @@ class _Simulator:
     # ------------------------------------------------------------------ maestros
     def clientes(self) -> pd.DataFrame:
         rng, n = self.rng, self.cfg.clients
-        diez = rng.integers(1_000_000_000, 1_199_999_999, size=n * 2)
-        ocho = rng.integers(10_000_000, 99_999_999, size=n * 2)
-        docs = np.where(rng.random(n * 2) < 0.75, diez, ocho)
+        # Documentos en un rango ficticio a propósito (prefijo 99, 9 o 10 dígitos): pasan la
+        # regla de formato, pero no coinciden con la numeración de cédulas colombianas, así que
+        # ningún documento del repositorio puede corresponder a una persona real (ADR-0004).
+        diez = rng.integers(DOC_FICTICIO_10[0], DOC_FICTICIO_10[1], size=n * 2)
+        nueve = rng.integers(DOC_FICTICIO_9[0], DOC_FICTICIO_9[1], size=n * 2)
+        docs = np.where(rng.random(n * 2) < 0.75, diez, nueve)
         docs = pd.unique(docs)[:n]
         nombres = [
             f"{rng.choice(NOMBRES)} {rng.choice(APELLIDOS)} {rng.choice(APELLIDOS)}"
