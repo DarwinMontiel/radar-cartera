@@ -79,6 +79,11 @@ def evaluate_promises(
 
     Ventana: desde el día de la gestión hasta ``fecha_promesa + grace_days``. Una promesa es
     *evaluable* solo si su ventana ya cerró al corte ``as_of``; las demás quedan pendientes.
+
+    Atribución (último toque): cada pago cuenta para **una sola** promesa. Si cae en la ventana
+    de varias promesas de la misma obligación, se atribuye a la gestión más reciente anterior al
+    pago (empate: el ``id_gestion`` mayor). Así un mismo peso no se cuenta dos veces en la
+    efectividad ni en el ranking de gestores.
     """
     promesas = gestiones.loc[
         gestiones["resultado"] == RESULTADO_PROMESA,
@@ -94,11 +99,14 @@ def evaluate_promises(
     promesas["inicio"] = promesas["fecha_gestion"].dt.normalize()
     promesas["fin"] = promesas["fecha_promesa"] + pd.Timedelta(days=grace_days)
 
-    cruce = promesas.merge(
-        pagos[["id_obligacion", "fecha_pago", "valor"]], on="id_obligacion", how="left"
+    cruce = promesas[["id_gestion", "id_obligacion", "fecha_gestion", "inicio", "fin"]].merge(
+        pagos[["id_pago", "id_obligacion", "fecha_pago", "valor"]], on="id_obligacion"
     )
-    en_ventana = cruce["fecha_pago"].between(cruce["inicio"], cruce["fin"])
-    pagado = cruce["valor"].where(en_ventana, 0.0).groupby(cruce["id_gestion"]).sum()
+    cruce = cruce[cruce["fecha_pago"].between(cruce["inicio"], cruce["fin"])]
+    atribuidos = cruce.sort_values(["fecha_gestion", "id_gestion"], kind="stable").drop_duplicates(
+        "id_pago", keep="last"
+    )
+    pagado = atribuidos.groupby("id_gestion")["valor"].sum()
 
     promesas["valor_pagado"] = promesas["id_gestion"].map(pagado).fillna(0.0)
     promesas["evaluable"] = promesas["fin"] <= pd.Timestamp(as_of)

@@ -43,6 +43,43 @@ Solo es **evaluable** si su ventana ya cerró en la fecha de corte; las promesas
 abierta no entran en el denominador (contarlas como incumplidas castigaría injustamente a los
 gestores al final de cada mes).
 
+#### Un pago, una sola promesa (atribución por último toque)
+
+Es común que una obligación reciba dos promesas con ventanas solapadas: la gestora de temprana
+consigue un compromiso el lunes y el miércoles otro gestor vuelve a llamar y obtiene uno nuevo.
+Si el cliente paga el jueves, ese pago **no puede contar dos veces**: inflaría la efectividad
+y el recaudo de promesas del ranking.
+
+Regla: cada pago se atribuye a **una sola** promesa, la de la **gestión más reciente** anterior
+al pago cuya ventana lo contiene (empate: el `id_gestion` mayor). La promesa anterior queda sin
+ese pago y, si no tiene otros, se evalúa como incumplida. Es la convención de *último toque*
+habitual en cobranza: el crédito es de quien cerró el compromiso vigente cuando el cliente pagó.
+La garantizan dos pruebas: un caso calculado a mano
+(`test_overlapping_promises_share_one_payment_by_last_touch`) y una propiedad sobre los datos
+sintéticos (lo atribuido a promesas nunca supera lo pagado por obligación).
+
+#### Vida de una promesa de pago
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> Pactada: gestión con resultado<br/>"Promesa de pago"
+    Pactada --> EnVentana: fecha y valor registrados
+    EnVentana --> EnVentana: llega un pago de la obligación<br/>(se atribuye por último toque)
+    EnVentana --> Pendiente: corte antes de<br/>fecha pactada + 3 días
+    Pendiente --> EnVentana: siguiente corte
+    EnVentana --> Cumplida: ventana cerrada y<br/>pagado ≥ 90 % de lo prometido
+    EnVentana --> Incumplida: ventana cerrada y<br/>pagado < 90 %
+    Cumplida --> [*]
+    Incumplida --> [*]
+
+    state "En ventana" as EnVentana
+    state "Pendiente (no evaluable)" as Pendiente
+```
+
+Las *pendientes* no entran al denominador de la efectividad; las *cumplidas* suman su
+`valor_pagado` al recaudo de promesas del gestor que hizo la gestión.
+
 ### Contacto
 
 Son contacto: *Contacto titular*, *Contacto tercero*, *Promesa de pago* y *Rehúsa pago*.

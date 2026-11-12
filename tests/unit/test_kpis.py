@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import math
 
+import pandas as pd
 import pytest
 
 from radar_cartera.domain import SALIDA
 from radar_cartera.kpis import collector_ranking, compute_all, monthly_kpis, roll_rates
-from radar_cartera.model import StarSchema, evaluate_promises
+from radar_cartera.model import StarSchema, build_model, evaluate_promises
 from tests.conftest import AS_OF, tiny_data
 
 
@@ -63,6 +64,31 @@ def test_late_payment_outside_grace_does_not_count() -> None:
     data.pagos.loc[1, "fecha_pago"] = data.pagos.loc[1, "fecha_pago"].replace(day=18)  # 14 + 3 = 17
     promesas = evaluate_promises(data.gestiones, data.pagos, AS_OF).set_index("id_gestion")
     assert promesas.loc["GS1", "valor_pagado"] == 0
+
+
+def test_overlapping_promises_share_one_payment_by_last_touch() -> None:
+    """Dos promesas solapadas de gestores distintos y un solo pago de 600 el 15-oct.
+
+    GS1 (G01, 10-oct, ventana hasta 17-oct) y GS4 (G02, 12-oct, ventana hasta 19-oct). El pago
+    se atribuye a la gestión más reciente (GS4): no se cuenta dos veces.
+    """
+    data = tiny_data()
+    data.gestiones.loc[len(data.gestiones)] = [
+        "GS4", "OB2", "G02", pd.Timestamp("2026-10-12 15:00"), "Llamada",
+        "Promesa de pago", pd.Timestamp("2026-10-16"), 600.0,
+    ]  # fmt: skip
+    promesas = evaluate_promises(data.gestiones, data.pagos, AS_OF).set_index("id_gestion")
+    assert promesas.loc["GS4", "valor_pagado"] == 600
+    assert bool(promesas.loc["GS4", "cumplida"])
+    assert promesas.loc["GS1", "valor_pagado"] == 0
+    assert not bool(promesas.loc["GS1", "cumplida"])
+    assert promesas["valor_pagado"].sum() == data.pagos.loc[1, "valor"]
+
+    model = build_model(data, AS_OF)
+    ranking = collector_ranking(model, "2026-10").set_index("id_gestor")
+    assert ranking.loc["G02", "recaudo_promesas"] == 600
+    assert ranking.loc["G01", "recaudo_promesas"] == 0
+    assert _month(model, "2026-10")["efectividad_promesas"] == 0.5
 
 
 def test_roll_rates_include_exits(tiny_model: StarSchema) -> None:

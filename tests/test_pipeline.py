@@ -204,3 +204,13 @@ def test_as_of_reprocesses_a_past_month(
 def test_as_of_before_second_cut_fails_with_clear_message(raw_dir: Path, tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="corte anterior"):
         run_pipeline(raw_dir, tmp_path, as_of=date(2026, 7, 31))
+
+
+def test_each_payment_is_attributed_to_at_most_one_promise(pipeline_run: Run) -> None:
+    """Con promesas solapadas, lo atribuido a promesas nunca supera lo efectivamente pagado."""
+    result, _, _ = pipeline_run
+    assert result.model is not None
+    promesas = result.model.fact_promesas.groupby("obligacion_key")["valor_pagado"].sum()
+    pagos = result.model.fact_pagos.groupby("obligacion_key")["valor"].sum()
+    exceso = promesas.sub(pagos.reindex(promesas.index, fill_value=0.0))
+    assert (exceso <= 1e-6).all()
