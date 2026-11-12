@@ -18,6 +18,7 @@ from radar_cartera.warehouse import DIALECTS, ddl
 app = typer.Typer(
     help="Radar de Cartera: ETL, calidad de datos y KPIs de cartera y cobranzas.",
     no_args_is_help=True,
+    add_completion=False,
 )
 
 

@@ -110,7 +110,10 @@ def roll_rates(model: StarSchema, month: str | None = None) -> tuple[pd.DataFram
     month = month or months[-1]
     idx = months.index(month)
     if idx == 0:
-        raise ValueError("El primer corte no tiene corte anterior para calcular roll rates")
+        raise ValueError(
+            f"El corte {month} es el primero de los datos: no tiene corte anterior para "
+            "calcular la matriz de roll rate."
+        )
     origin = cartera[cartera["anio_mes"] == months[idx - 1]][["obligacion_key", "bucket_mora"]]
     dest = cartera[cartera["anio_mes"] == month][["obligacion_key", "bucket_mora"]]
     pairs = origin.merge(dest, on="obligacion_key", how="left", suffixes=("_origen", "_destino"))

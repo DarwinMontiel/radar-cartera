@@ -168,7 +168,10 @@ def test_ddl_for_postgres() -> None:
 
 
 def test_as_of_reprocesses_a_past_month(
-    pipeline_run: Run, raw_dir: Path, synthetic, tmp_path: Path  # type: ignore[no-untyped-def]
+    pipeline_run: Run,
+    raw_dir: Path,
+    synthetic,
+    tmp_path: Path,  # type: ignore[no-untyped-def]
 ) -> None:
     """--as-of en un mes intermedio: mismo corte y recaudo que la corrida completa para ese mes.
 

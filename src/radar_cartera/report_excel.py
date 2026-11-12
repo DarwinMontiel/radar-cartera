@@ -234,7 +234,11 @@ def _quality(wb: Workbook, quality: QualityReport, subtitle: str) -> None:
     rejected = quality.rejected_frame().head(5000)
     rs = wb.create_sheet("Rechazados")
     _header(rs, "Registros en cuarentena (máx. 5.000)", subtitle)
-    cols = {"conjunto": ("Conjunto de datos", "@"), "motivo": ("Motivo", "@"), "registro": ("Registro", "@")}
+    cols = {
+        "conjunto": ("Conjunto de datos", "@"),
+        "motivo": ("Motivo", "@"),
+        "registro": ("Registro", "@"),
+    }
     _write_table(rs, rejected, cols, top=4, name="Rechazados")
     rs.column_dimensions["B"].width = 26
     rs.column_dimensions["C"].width = 120
@@ -243,9 +247,7 @@ def _quality(wb: Workbook, quality: QualityReport, subtitle: str) -> None:
 def write_excel(
     kpis: KpiBundle, quality: QualityReport, path: Path, run_id: str, generated: datetime
 ) -> Path:
-    subtitle = (
-        f"Generado {generated:%Y-%m-%d %H:%M} · ejecución {run_id} · fuente: radar-cartera"
-    )
+    subtitle = f"Generado {generated:%Y-%m-%d %H:%M} · ejecución {run_id} · fuente: radar-cartera"
     wb = Workbook()
     _summary(wb, kpis, subtitle)
     _buckets(wb, kpis, subtitle)
