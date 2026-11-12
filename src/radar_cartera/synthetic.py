@@ -143,8 +143,8 @@ class _Simulator:
     def clientes(self) -> pd.DataFrame:
         rng, n = self.rng, self.cfg.clients
         # Documentos en un rango ficticio a propósito (prefijo 99, 9 o 10 dígitos): pasan la
-        # regla de formato, pero no coinciden con la numeración de cédulas colombianas, así que
-        # ningún documento del repositorio puede corresponder a una persona real (ADR-0004).
+        # regla de formato, pero quedan lejos de la numeración habitual de cédulas colombianas,
+        # para no asociar nombres ficticios a documentos de personas reales (ADR-0004).
         diez = rng.integers(DOC_FICTICIO_10[0], DOC_FICTICIO_10[1], size=n * 2)
         nueve = rng.integers(DOC_FICTICIO_9[0], DOC_FICTICIO_9[1], size=n * 2)
         docs = np.where(rng.random(n * 2) < 0.75, diez, nueve)

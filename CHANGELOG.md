@@ -12,8 +12,10 @@ Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) · [SemVer](
   tablero, el Excel y `rechazados.csv`.
 - La CLI muestra montos y porcentajes en formato colombiano (`$ 15.217.214.500`, `11,4 %`) y
   explica los errores en español sin *traceback*.
-- Los documentos sintéticos usan un rango ficticio (prefijo 99) que no coincide con cédulas
-  reales; se regeneró la muestra.
+- Los documentos sintéticos usan un rango ficticio (prefijo 99), lejos de la numeración habitual
+  de cédulas; se regeneró la muestra.
+- La CLI explica en español los errores de uso (fecha mal escrita, carpeta `--raw` inexistente)
+  y la ayuda muestra sus secciones en español.
 
 ### Agregado
 - Tablero: *lectura para el comité* con semáforo por variación del PAR30, botón para descargar

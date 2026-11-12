@@ -9,7 +9,7 @@ tablero web y en Power BI, con los mismos números en los tres.
 
 [![CI](https://github.com/DarwinMontiel/radar-cartera/actions/workflows/ci.yml/badge.svg)](https://github.com/DarwinMontiel/radar-cartera/actions/workflows/ci.yml)
 [![Tablero](https://img.shields.io/badge/tablero-GitHub%20Pages-0d9488)](https://darwinmontiel.github.io/radar-cartera/)
-![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-3776AB?logo=python&logoColor=white)
 ![pandas](https://img.shields.io/badge/pandas-%E2%89%A5%202.2-150458?logo=pandas&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![Power BI](https://img.shields.io/badge/Power%20BI-DAX%20%2B%20Power%20Query-F2C811?logo=powerbi&logoColor=black)
@@ -84,8 +84,8 @@ crédito de una financiera **ficticia**, con gestores también ficticios.
    Salazar consigue una nueva promesa de **$ 452.900 para el 11-oct**. Tampoco se cumple.
 3. **25 de octubre.** Karen vuelve a llamar y el cliente promete **$ 430.400 para el 27-oct**.
    Ese mismo día entra un pago por PSE de **$ 456.200**, más del 90 % de lo prometido:
-   **promesa cumplida**. Ese recaudo suma en el ranking de Karen y no en el de Ana Lucía:
-   cada pago se atribuye a una sola promesa, la gestión más reciente
+   **promesa cumplida**, y ese recaudo suma en el ranking de Karen. Si dos promesas abiertas
+   compitieran por el mismo pago, contaría solo para la gestión más reciente
    ([regla de último toque](docs/kpis.md#un-pago-una-sola-promesa-atribución-por-último-toque)).
 4. **Corte de octubre.** En la matriz de roll rate, la obligación aparece en la celda
    *31-60 → 31-60*: pagó, pero no lo suficiente para ponerse al día.
@@ -221,10 +221,10 @@ docs/                 # arquitectura, KPIs, calidad de datos, ADR
 
 | En este repositorio | De dónde viene |
 |---|---|
-| Limpieza de exportes de cobranza con formatos colombianos, duplicados y referencias huérfanas | Procesamiento y análisis de datos con Python y pandas, y reportes para una línea de cobranzas |
+| Limpieza de exportes de cobranza con formatos colombianos, duplicados y referencias huérfanas | Scripts de Python y pandas para procesar y analizar datos, y reportes de KPIs en una línea de cobranzas |
 | KPIs de cartera (PAR, roll rate, efectividad de promesas) con una sola definición en SQL, pandas y DAX | Tableros de Power BI y consultas SQL para el seguimiento de indicadores de cobranza |
 | Cuarentena auditable, carga idempotente y manifiesto por ejecución | Bots RPA en producción para una fintech de gestión de cartera, donde cada ejecución debe poder repetirse y auditarse |
-| Reglas de negocio explícitas y probadas (promesas, gracia, último toque) | Trabajo diario con equipos de cobranza: el dato tiene que cuadrar con lo que el gestor vivió en la llamada |
+| Reglas de negocio explícitas y probadas (promesas, gracia, último toque) | Experiencia en una línea de cobranzas y en una fintech de cartera: el dato tiene que cuadrar con lo que el gestor registró en la llamada |
 
 ### Otros proyectos del portafolio
 
