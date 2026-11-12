@@ -39,7 +39,6 @@ filterwarnings = ["ignore::DeprecationWarning:openpyxl.*"]
 
 [tool.coverage.run]
 source = ["radar_cartera"]
-omit = ["*/cli.py"]
 
 [tool.coverage.report]
 show_missing = true
