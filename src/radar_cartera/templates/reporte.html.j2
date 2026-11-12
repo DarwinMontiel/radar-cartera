@@ -216,7 +216,7 @@
         },
         options: {
           maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
-          scales: { y: { ticks: { callback: (x) => `$${nf.format(x)} M` } }, y1: { ...pctAxis, position: "right", grid: { drawOnChartArea: false } } },
+          scales: { y: { ticks: { callback: (x) => `$ ${nf.format(x)} M` } }, y1: { ...pctAxis, position: "right", grid: { drawOnChartArea: false } } },
           plugins: { tooltip: { callbacks: { label: (c) => (c.dataset.yAxisID === "y1" ? `${c.dataset.label}: ${pct(c.parsed.y)}` : `${c.dataset.label}: $ ${nf.format(c.parsed.y)} M`) } } },
         },
       });
@@ -225,7 +225,7 @@
       new Chart(document.getElementById("ch-franjas"), {
         type: "bar",
         data: { labels: D.buckets.map((b) => b.anio_mes), datasets: buckets.map((b, i) => ({ label: b, data: D.buckets.map((r) => r[b] / 1e6), backgroundColor: palette[i % palette.length] })) },
-        options: { maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: (x) => `$${nf.format(x)} M` } } }, plugins: { tooltip: { callbacks: { label: (c) => `${c.dataset.label}: $ ${nf.format(c.parsed.y)} M` } } } },
+        options: { maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: (x) => `$ ${nf.format(x)} M` } } }, plugins: { tooltip: { callbacks: { label: (c) => `${c.dataset.label}: $ ${nf.format(c.parsed.y)} M` } } } },
       });
 
       const lines = (id, series) =>
