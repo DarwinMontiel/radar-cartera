@@ -8,12 +8,26 @@ from datetime import date, datetime
 from pathlib import Path
 
 import typer
+import typer.rich_utils
+from sqlalchemy import exc as sa_exc
 
 from radar_cartera.extract import SourceError
 from radar_cartera.formato import cop, entero, porcentaje
 from radar_cartera.pipeline import run_pipeline
 from radar_cartera.synthetic import SyntheticConfig, dirty_exports, generate, write_raw
 from radar_cartera.warehouse import DIALECTS, ddl
+
+# Títulos de la ayuda en español. Typer los lee como globales del módulo al dibujar la ayuda;
+# si una versión futura los quita, la ayuda simplemente queda con los títulos por defecto.
+for _nombre, _texto in {
+    "ARGUMENTS_PANEL_TITLE": "Argumentos",
+    "OPTIONS_PANEL_TITLE": "Opciones",
+    "COMMANDS_PANEL_TITLE": "Comandos",
+    "ERRORS_PANEL_TITLE": "Error",
+    "RICH_HELP": "Usa [blue]'{command_path} {help_option}'[/] para ver la ayuda.",
+}.items():
+    if hasattr(typer.rich_utils, _nombre):
+        setattr(typer.rich_utils, _nombre, _texto)
 
 app = typer.Typer(
     help="Radar de Cartera: ETL, calidad de datos y KPIs de cartera y cobranzas.",
@@ -28,14 +42,15 @@ def _date(value: str | None, option: str) -> date | None:
     try:
         return datetime.strptime(value, "%Y-%m-%d").date()
     except ValueError as exc:
-        raise typer.BadParameter(
-            f"'{value}' no es una fecha válida; usa el formato AAAA-MM-DD.", param_hint=option
+        raise _fail(
+            f"{option}: '{value}' no es una fecha válida; usa el formato AAAA-MM-DD.", code=2
         ) from exc
 
 
-def _fail(message: str) -> typer.Exit:
+def _fail(message: str, code: int = 1) -> typer.Exit:
+    """Error para humanos: mensaje en español, sin traceback. Código 2 = uso incorrecto."""
     typer.secho(f"Error: {message}", fg=typer.colors.RED, err=True)
-    return typer.Exit(code=1)
+    return typer.Exit(code=code)
 
 
 @app.callback()
@@ -69,9 +84,7 @@ def generate_cmd(
 
 @app.command("run")
 def run_cmd(
-    raw: Path = typer.Option(
-        Path("data/raw"), exists=True, file_okay=False, help="Exportes de origen."
-    ),
+    raw: Path = typer.Option(Path("data/raw"), help="Carpeta con los exportes de origen."),
     out: Path = typer.Option(Path("reports"), help="Carpeta de salida de reportes."),
     db: str | None = typer.Option(
         None, help="URL SQLAlchemy del DW (o variable CARTERA_DATABASE_URL). Sin URL no se carga."
@@ -83,12 +96,26 @@ def run_cmd(
 ) -> None:
     """Ejecuta el pipeline completo y escribe Excel, HTML, rechazados y manifiesto."""
     cut = _date(as_of, "--as-of")
+    if not raw.is_dir():
+        raise _fail(
+            f"--raw: no existe la carpeta '{raw}'. Genera datos de ejemplo con "
+            "'cartera generate --out data/raw'.",
+            code=2,
+        )
     try:
         result = run_pipeline(raw, out, cut, db or os.getenv("CARTERA_DATABASE_URL"))
     except SourceError as exc:
         raise _fail(str(exc)) from exc
     except ValueError as exc:
         raise _fail(f"no se pudo calcular el corte pedido: {exc}") from exc
+    except sa_exc.ArgumentError as exc:
+        # El mensaje original repite la URL (con la contraseña): no se muestra.
+        raise _fail("la URL del data warehouse (--db) no es válida.", code=2) from exc
+    except sa_exc.SQLAlchemyError as exc:
+        detalle = str(getattr(exc, "orig", None) or type(exc).__name__).strip().splitlines()[0]
+        raise _fail(
+            f"no se pudo cargar el data warehouse; la base quedó como estaba. Detalle: {detalle}"
+        ) from exc
     assert result.quality is not None
     assert result.kpis is not None
     latest = result.kpis.latest

@@ -41,6 +41,21 @@ def test_run_rejects_malformed_date(tmp_path: Path) -> None:
     result = runner.invoke(app, ["run", "--raw", str(tmp_path), "--as-of", "30/09/2026"])
     assert result.exit_code == 2
     assert "AAAA-MM-DD" in result.output
+    assert "Invalid value" not in result.output
+
+
+def test_run_explains_missing_raw_folder_in_spanish(tmp_path: Path) -> None:
+    result = runner.invoke(app, ["run", "--raw", str(tmp_path / "no-existe")])
+    assert result.exit_code == 2
+    assert "no existe la carpeta" in result.output
+    assert "does not exist" not in result.output
+
+
+def test_help_uses_spanish_panel_titles() -> None:
+    result = runner.invoke(app, ["--help"])
+    assert result.exit_code == 0
+    assert "Comandos" in result.output
+    assert "Commands" not in result.output
 
 
 def test_run_reports_missing_sources_without_traceback(tmp_path: Path) -> None:
@@ -58,6 +73,44 @@ def test_run_explains_an_as_of_without_previous_cut(tmp_path: Path) -> None:
     )
     assert result.exit_code == 1
     assert "corte anterior" in result.output
+
+
+def test_run_explains_database_errors_without_traceback_or_password(tmp_path: Path) -> None:
+    raw = tmp_path / "raw"
+    runner.invoke(app, ["generate", "--out", str(raw), "--clients", "60", "--months", "3"])
+
+    unreachable = tmp_path / "no-existe" / "dw.sqlite"
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            "--raw",
+            str(raw),
+            "--out",
+            str(tmp_path / "o"),
+            "--db",
+            f"sqlite:///{unreachable}",
+        ],
+    )
+    assert result.exit_code == 1
+    assert "no se pudo cargar el data warehouse" in result.output
+    assert "Traceback" not in result.output
+
+    malformed = runner.invoke(
+        app,
+        [
+            "run",
+            "--raw",
+            str(raw),
+            "--out",
+            str(tmp_path / "o2"),
+            "--db",
+            "no-es-url:clave-secreta",
+        ],
+    )
+    assert malformed.exit_code == 2
+    assert "no es válida" in malformed.output
+    assert "clave-secreta" not in malformed.output
 
 
 def test_ddl_command_and_unknown_dialect() -> None:
