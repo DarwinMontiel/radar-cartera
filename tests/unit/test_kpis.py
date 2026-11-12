@@ -6,9 +6,9 @@ import math
 
 import pytest
 
-from cartera_analytics.domain import SALIDA
-from cartera_analytics.kpis import collector_ranking, compute_all, monthly_kpis, roll_rates
-from cartera_analytics.model import StarSchema, evaluate_promises
+from radar_cartera.domain import SALIDA
+from radar_cartera.kpis import collector_ranking, compute_all, monthly_kpis, roll_rates
+from radar_cartera.model import StarSchema, evaluate_promises
 from tests.conftest import AS_OF, tiny_data
 
 

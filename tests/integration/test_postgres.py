@@ -12,8 +12,8 @@ import pandas as pd
 import pytest
 from sqlalchemy import create_engine, inspect
 
-from cartera_analytics.pipeline import run_pipeline
-from cartera_analytics.warehouse import VIEWS, read_view
+from radar_cartera.pipeline import run_pipeline
+from radar_cartera.warehouse import VIEWS, read_view
 
 pytestmark = pytest.mark.integration
 

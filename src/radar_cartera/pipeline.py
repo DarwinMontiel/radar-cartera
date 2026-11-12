@@ -15,17 +15,17 @@ from typing import Any, TypeVar
 
 from sqlalchemy import create_engine
 
-from cartera_analytics import __version__
-from cartera_analytics.extract import RawData, read_raw
-from cartera_analytics.kpis import KpiBundle, compute_all
-from cartera_analytics.model import StarSchema, build_model
-from cartera_analytics.quality import QualityReport, validate_all
-from cartera_analytics.report_excel import write_excel
-from cartera_analytics.report_html import write_html
-from cartera_analytics.transform import clean_all
-from cartera_analytics.warehouse import load
+from radar_cartera import __version__
+from radar_cartera.extract import RawData, read_raw
+from radar_cartera.kpis import KpiBundle, compute_all
+from radar_cartera.model import StarSchema, build_model
+from radar_cartera.quality import QualityReport, validate_all
+from radar_cartera.report_excel import write_excel
+from radar_cartera.report_html import write_html
+from radar_cartera.transform import clean_all
+from radar_cartera.warehouse import load
 
-log = logging.getLogger("cartera_analytics")
+log = logging.getLogger("radar_cartera")
 T = TypeVar("T")
 
 

@@ -1,7 +1,7 @@
 # Diccionario de KPIs
 
 Cada indicador tiene **una sola definición** implementada tres veces: en pandas
-(`src/cartera_analytics/kpis.py`), en SQL (`src/cartera_analytics/sql/views.sql`) y en DAX
+(`src/radar_cartera/kpis.py`), en SQL (`src/radar_cartera/sql/views.sql`) y en DAX
 (`powerbi/medidas.dax`). Las pruebas verifican que pandas y SQL dan el mismo resultado sobre los
 mismos datos, en SQLite (unitarias) y en PostgreSQL (integración).
 

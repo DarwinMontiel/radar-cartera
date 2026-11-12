@@ -7,8 +7,8 @@ import unicodedata
 import numpy as np
 import pandas as pd
 
-from cartera_analytics.domain import BUCKET_EDGES, BUCKETS, CIUDADES, RESULTADOS
-from cartera_analytics.extract import RawData
+from radar_cartera.domain import BUCKET_EDGES, BUCKETS, CIUDADES, RESULTADOS
+from radar_cartera.extract import RawData
 
 
 def _strip_accents(text: str) -> str:

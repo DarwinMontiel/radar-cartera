@@ -16,8 +16,8 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.worksheet.worksheet import Worksheet
 
-from cartera_analytics.kpis import KpiBundle
-from cartera_analytics.quality import QualityReport
+from radar_cartera.kpis import KpiBundle
+from radar_cartera.quality import QualityReport
 
 TEAL = "0D9488"
 NAVY = "0F1F2E"
@@ -244,7 +244,7 @@ def write_excel(
     kpis: KpiBundle, quality: QualityReport, path: Path, run_id: str, generated: datetime
 ) -> Path:
     subtitle = (
-        f"Generado {generated:%Y-%m-%d %H:%M} · ejecución {run_id} · fuente: cartera-analytics"
+        f"Generado {generated:%Y-%m-%d %H:%M} · ejecución {run_id} · fuente: radar-cartera"
     )
     wb = Workbook()
     _summary(wb, kpis, subtitle)
@@ -253,7 +253,7 @@ def write_excel(
     _ranking(wb, kpis, subtitle)
     _products(wb, kpis, subtitle)
     _quality(wb, quality, subtitle)
-    wb.properties.creator = "cartera-analytics"
+    wb.properties.creator = "radar-cartera"
     wb.properties.title = f"Reporte de cartera {kpis.month}"
     path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(path)

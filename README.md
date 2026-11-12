@@ -5,8 +5,8 @@
 **Pipeline ETL y analítica de cartera y cobranzas: de exportes "sucios" en CSV y Excel a un
 modelo estrella en PostgreSQL, KPIs de riesgo y gestión, Power BI y reportes listos para negocio.**
 
-[![CI](https://github.com/DarwinMontiel/cartera-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/DarwinMontiel/cartera-analytics/actions/workflows/ci.yml)
-[![Tablero](https://img.shields.io/badge/tablero-GitHub%20Pages-0d9488)](https://darwinmontiel.github.io/cartera-analytics/)
+[![CI](https://github.com/DarwinMontiel/radar-cartera/actions/workflows/ci.yml/badge.svg)](https://github.com/DarwinMontiel/radar-cartera/actions/workflows/ci.yml)
+[![Tablero](https://img.shields.io/badge/tablero-GitHub%20Pages-0d9488)](https://darwinmontiel.github.io/radar-cartera/)
 ![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-3776AB?logo=python&logoColor=white)
 ![pandas](https://img.shields.io/badge/pandas-2.x%20%7C%203.x-150458?logo=pandas&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
@@ -14,11 +14,11 @@ modelo estrella en PostgreSQL, KPIs de riesgo y gestión, Power BI y reportes li
 ![Coverage](https://img.shields.io/badge/coverage-99%25-brightgreen)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-[**Ver tablero en vivo**](https://darwinmontiel.github.io/cartera-analytics/) ·
-[KPIs](docs/kpis.md) · [Calidad de datos](docs/data-quality.md) ·
-[Arquitectura](docs/architecture.md) · [Power BI](powerbi/README.md)
+[**Ver tablero en vivo**](https://darwinmontiel.github.io/radar-cartera/) ·
+[KPIs](docs/kpis.md) · [Calidad de datos](docs/calidad-de-datos.md) ·
+[Arquitectura](docs/arquitectura.md) · [Power BI](powerbi/README.md)
 
-<img src="docs/images/tablero.png" alt="Tablero de cartera: KPIs, recaudo, franjas de mora, PAR y gestión" width="900">
+<img src="docs/imagenes/tablero.png" alt="Tablero de cartera: KPIs, recaudo, franjas de mora, PAR y gestión" width="900">
 
 </div>
 
@@ -82,13 +82,13 @@ flowchart LR
 
 Fórmulas, reglas de borde y su justificación en [docs/kpis.md](docs/kpis.md).
 
-<img src="docs/images/roll-rate.png" alt="Matriz de roll rate" width="900">
+<img src="docs/imagenes/roll-rate.png" alt="Matriz de roll rate" width="900">
 
 ## Inicio rápido
 
 ```bash
-git clone https://github.com/DarwinMontiel/cartera-analytics.git
-cd cartera-analytics
+git clone https://github.com/DarwinMontiel/radar-cartera.git
+cd radar-cartera
 python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
@@ -108,7 +108,7 @@ reports/
 ```
 
 Con PostgreSQL en Docker: `make dw` (levanta la base y ejecuta el pipeline contra ella).
-¿Solo quieres ver los datos de entrada? Hay una muestra pequeña en [data/sample](data/sample).
+¿Solo quieres ver los datos de entrada? Hay una muestra pequeña en [data/muestra](data/muestra).
 
 ## Calidad
 
@@ -128,7 +128,7 @@ make integration        # con CARTERA_DATABASE_URL apuntando a PostgreSQL
 ## Estructura
 
 ```
-src/cartera_analytics/
+src/radar_cartera/
 ├── extract.py        # lectura de CSV/Excel sin inferencia de tipos
 ├── transform.py      # limpieza vectorizada
 ├── quality.py        # motor de reglas y cuarentena

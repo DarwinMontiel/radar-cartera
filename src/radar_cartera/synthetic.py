@@ -17,7 +17,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from cartera_analytics.domain import CANALES_PAGO, RESULTADO_PROMESA
+from radar_cartera.domain import CANALES_PAGO, RESULTADO_PROMESA
 
 NOMBRES = [
     "Laura", "Andrés", "María", "Juan", "Valentina", "Santiago", "Camila", "Carlos", "Daniela",

@@ -6,10 +6,10 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from cartera_analytics.extract import RawData
-from cartera_analytics.model import StarSchema, build_model
-from cartera_analytics.pipeline import PipelineResult, run_pipeline
-from cartera_analytics.synthetic import (
+from radar_cartera.extract import RawData
+from radar_cartera.model import StarSchema, build_model
+from radar_cartera.pipeline import PipelineResult, run_pipeline
+from radar_cartera.synthetic import (
     SyntheticConfig,
     SyntheticData,
     dirty_exports,

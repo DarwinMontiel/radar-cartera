@@ -12,9 +12,9 @@ import pandas as pd
 from jinja2 import Environment, PackageLoader, select_autoescape
 from markupsafe import Markup
 
-from cartera_analytics import __version__
-from cartera_analytics.kpis import KpiBundle
-from cartera_analytics.quality import QualityReport
+from radar_cartera import __version__
+from radar_cartera.kpis import KpiBundle
+from radar_cartera.quality import QualityReport
 
 
 def _clean(value: Any) -> Any:
@@ -67,7 +67,7 @@ def write_html(
     excel_name: str | None = None,
 ) -> Path:
     env = Environment(
-        loader=PackageLoader("cartera_analytics", "templates"),
+        loader=PackageLoader("radar_cartera", "templates"),
         autoescape=select_autoescape(["html", "j2"]),
     )
     run = {

@@ -18,4 +18,4 @@ Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) · [SemVer](
 - Generador de datos sintéticos con anomalías registradas.
 - CI con pruebas contra PostgreSQL 16 y publicación automática del tablero.
 
-[1.0.0]: https://github.com/DarwinMontiel/cartera-analytics/releases/tag/v1.0.0
+[1.0.0]: https://github.com/DarwinMontiel/radar-cartera/releases/tag/v1.0.0

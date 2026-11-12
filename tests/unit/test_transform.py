@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from cartera_analytics.transform import (
+from radar_cartera.transform import (
     aging_bucket,
     normalize_city,
     normalize_documento,

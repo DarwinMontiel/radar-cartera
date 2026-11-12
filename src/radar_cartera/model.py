@@ -12,7 +12,7 @@ from datetime import date
 import numpy as np
 import pandas as pd
 
-from cartera_analytics.domain import (
+from radar_cartera.domain import (
     DIAS,
     MESES,
     PROMESA_DIAS_GRACIA,
@@ -20,8 +20,8 @@ from cartera_analytics.domain import (
     RESULTADO_PROMESA,
     RESULTADOS_CONTACTO,
 )
-from cartera_analytics.extract import RawData
-from cartera_analytics.transform import aging_bucket
+from radar_cartera.extract import RawData
+from radar_cartera.transform import aging_bucket
 
 
 @dataclass

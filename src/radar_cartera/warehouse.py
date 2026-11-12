@@ -32,7 +32,7 @@ from sqlalchemy.dialects import postgresql, sqlite
 from sqlalchemy.engine import Dialect
 from sqlalchemy.schema import CreateIndex, CreateTable
 
-from cartera_analytics.model import StarSchema
+from radar_cartera.model import StarSchema
 
 metadata = MetaData()
 MONEY = Numeric(18, 2)
@@ -140,7 +140,7 @@ VIEWS = ["vw_kpi_mensual", "vw_cartera_franja", "vw_roll_rate", "vw_ranking_gest
 
 
 def views_sql() -> list[str]:
-    script = resources.files("cartera_analytics").joinpath("sql/views.sql").read_text("utf-8")
+    script = resources.files("radar_cartera").joinpath("sql/views.sql").read_text("utf-8")
     statements = [s.strip() for s in script.split(";")]
     return [
         s for s in statements if s and not all(line.startswith("--") for line in s.splitlines())

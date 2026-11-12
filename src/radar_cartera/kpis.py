@@ -11,9 +11,9 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from cartera_analytics.domain import BUCKETS, SALIDA
-from cartera_analytics.model import StarSchema
-from cartera_analytics.transform import safe_ratio
+from radar_cartera.domain import BUCKETS, SALIDA
+from radar_cartera.model import StarSchema
+from radar_cartera.transform import safe_ratio
 
 
 @dataclass

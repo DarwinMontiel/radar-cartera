@@ -4,8 +4,8 @@ import json
 
 import pandas as pd
 
-from cartera_analytics.quality import QualityReport, Rule, apply_rules, validate_all
-from cartera_analytics.transform import clean_all
+from radar_cartera.quality import QualityReport, Rule, apply_rules, validate_all
+from radar_cartera.transform import clean_all
 from tests.conftest import AS_OF, tiny_data
 
 
@@ -69,7 +69,7 @@ def test_future_dated_and_incomplete_promises_are_rejected() -> None:
 
 
 def test_every_injected_anomaly_is_caught(synthetic) -> None:  # type: ignore[no-untyped-def]
-    from cartera_analytics.extract import RawData
+    from radar_cartera.extract import RawData
 
     raw = RawData(
         synthetic.clientes.astype("string"),

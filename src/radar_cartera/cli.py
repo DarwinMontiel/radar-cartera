@@ -9,9 +9,9 @@ from pathlib import Path
 
 import typer
 
-from cartera_analytics.pipeline import run_pipeline
-from cartera_analytics.synthetic import SyntheticConfig, dirty_exports, generate, write_raw
-from cartera_analytics.warehouse import ddl
+from radar_cartera.pipeline import run_pipeline
+from radar_cartera.synthetic import SyntheticConfig, dirty_exports, generate, write_raw
+from radar_cartera.warehouse import ddl
 
 app = typer.Typer(help="ETL y analítica de cartera y cobranzas.", no_args_is_help=True)
 

@@ -11,5 +11,5 @@
 ## Checklist
 
 - [ ] Si cambia un KPI: actualizado en `kpis.py`, `sql/views.sql`, `powerbi/medidas.dax` y `docs/kpis.md`
-- [ ] Si agrega una regla de calidad: documentada en `docs/data-quality.md` con su prueba
+- [ ] Si agrega una regla de calidad: documentada en `docs/calidad-de-datos.md` con su prueba
 - [ ] CHANGELOG actualizado

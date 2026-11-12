@@ -14,14 +14,14 @@ from typing import Literal
 
 import pandas as pd
 
-from cartera_analytics.domain import (
+from radar_cartera.domain import (
     CANALES_GESTION,
     CANALES_PAGO,
     EQUIPOS,
     RESULTADO_PROMESA,
     SEGMENTOS,
 )
-from cartera_analytics.extract import RawData
+from radar_cartera.extract import RawData
 
 Check = Callable[[pd.DataFrame], pd.Series]
 Severity = Literal["reject", "warn"]

@@ -3,7 +3,7 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [project]
-name = "cartera-analytics"
+name = "radar-cartera"
 version = "1.0.0"
 description = "Pipeline ETL y analítica de cartera y cobranzas: calidad de datos, modelo estrella en PostgreSQL, KPIs, Power BI y reportes Excel."
 readme = "README.md"
@@ -26,10 +26,10 @@ dependencies = [
 dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6", "mypy>=1.11", "pandas-stubs>=2.2"]
 
 [project.scripts]
-cartera = "cartera_analytics.cli:app"
+cartera = "radar_cartera.cli:app"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/cartera_analytics"]
+packages = ["src/radar_cartera"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -38,7 +38,7 @@ markers = ["integration: requiere PostgreSQL (CARTERA_DATABASE_URL)"]
 filterwarnings = ["ignore::DeprecationWarning:openpyxl.*"]
 
 [tool.coverage.run]
-source = ["cartera_analytics"]
+source = ["radar_cartera"]
 omit = ["*/cli.py"]
 
 [tool.coverage.report]
@@ -57,7 +57,7 @@ ignore = ["E501", "S101", "B008", "RUF001", "RUF002", "RUF003", "PD010", "PD013"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S311"]
-"src/cartera_analytics/synthetic.py" = ["S311"]
+"src/radar_cartera/synthetic.py" = ["S311"]
 
 [tool.mypy]
 python_version = "3.11"

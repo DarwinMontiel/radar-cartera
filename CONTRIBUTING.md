@@ -9,6 +9,6 @@
 - **Un KPI, una definición:** cualquier cambio de fórmula se hace en `kpis.py`, `sql/views.sql`,
   `powerbi/medidas.dax` y `docs/kpis.md` en el mismo PR. Las pruebas comparan pandas vs. SQL.
 - **Nada se descarta en silencio:** toda regla de calidad nueva va a `quality.py` con severidad
-  explícita, prueba y documentación en `docs/data-quality.md`.
+  explícita, prueba y documentación en `docs/calidad-de-datos.md`.
 - Las vistas SQL usan solo SQL estándar (deben correr en SQLite y PostgreSQL).
 - Cobertura mínima en CI: 90 %.

@@ -11,8 +11,8 @@ import pytest
 from openpyxl import load_workbook
 from sqlalchemy import Engine, create_engine, inspect
 
-from cartera_analytics.pipeline import PipelineResult
-from cartera_analytics.warehouse import VIEWS, ddl, load, read_view
+from radar_cartera.pipeline import PipelineResult
+from radar_cartera.warehouse import VIEWS, ddl, load, read_view
 
 KPI_COLUMNS = [
     "saldo_total", "saldo_vencido", "obligaciones_mora", "par30", "par90", "recaudo",

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from cartera_analytics.synthetic import SyntheticConfig, generate, month_ends
+from radar_cartera.synthetic import SyntheticConfig, generate, month_ends
 
 
 def test_generation_is_deterministic() -> None:
