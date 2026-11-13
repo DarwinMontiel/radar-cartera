@@ -248,7 +248,7 @@ docs/                 # arquitectura, KPIs, calidad de datos, ADR
 
 ## Autor
 
-**Darwin Montiel Mora**: desarrollador RPA y backend, ingeniero de sistemas. Bogotá, Colombia.
+**Darwin Montiel Mora**: desarrollador RPA y backend. Bogotá, Colombia.
 [LinkedIn](https://www.linkedin.com/in/darwin-montiel-mora-925216206) · [GitHub](https://github.com/DarwinMontiel)
 
 Todos los datos del repositorio son sintéticos: personas, documentos, gestores y entidades son
