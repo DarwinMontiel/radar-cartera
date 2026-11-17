@@ -5,69 +5,88 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Radar de Cartera</title>
   <meta name="description" content="Tablero analítico de cartera y cobranza: saldo, mora, recaudo, roll rates, gestores y calidad de datos.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230d9488'/><path d='M8 22V12m6 10V8m6 14v-6m6 6V14' stroke='white' stroke-width='3' stroke-linecap='round'/></svg>">
+  <meta name="theme-color" content="#0b2545">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%230b2545'/><path d='M8 23V13m6 10V8m6 15v-6m6 6V15' stroke='%23d4a72c' stroke-width='3' stroke-linecap='square'/></svg>">
   <style>
+    /* Radar de Cartera · identidad visual propia: informe financiero para el comité de cartera.
+       Portada azul marino con filete dorado, secciones numeradas, cifras grandes y tablas con
+       filas alternas. Gráficos en azul, esmeralda, oro y coral. Contraste verificado (WCAG AA). */
     :root {
-      --bg: #f4f7f8; --surface: #fff; --surface-2: #f8fafb; --border: #e2e8ec;
-      --text: #0f1f2e; --muted: #5b6b78; --accent: #0d9488; --accent-rgb: 13 148 136;
-      --c1: #0d9488; --c2: #2563eb; --c3: #f59e0b; --c4: #e11d48; --c5: #7c3aed; --c6: #475569;
-      --ok: #15803d; --err: #b91c1c; --err-soft: #fee2e2; --topbar: #0f1f2e; --radius: 12px;
+      --bg: #f3f5f9; --surface: #fff; --surface-2: #f6f8fb; --border: #dde3ec;
+      --text: #0b1f3a; --muted: #55657e; --accent: #1f4e9c; --accent-rgb: 31 78 156;
+      --gold: #d4a72c; --gold-text: #8a6a12;
+      --c1: #1f4e9c; --c2: #0f8a6a; --c3: #d4a72c; --c4: #d6493b; --c5: #6d5bd0; --c6: #64748b;
+      --ok: #0f7a5c; --err: #c0392b; --err-soft: #fde8e6; --topbar: #0b2545; --topbar-2: #13315c; --radius: 4px;
+      --font: "Aptos", "Segoe UI Variable Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      --font-num: "Aptos", "Segoe UI Variable Display", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
       color-scheme: light;
     }
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
-        --bg: #0b141c; --surface: #111d27; --surface-2: #0f1922; --border: #1f2f3c;
-        --text: #e6edf2; --muted: #8aa0b0; --accent: #2dd4bf; --accent-rgb: 45 212 191;
-        --c1: #2dd4bf; --c2: #60a5fa; --c3: #fbbf24; --c4: #fb7185; --c5: #a78bfa; --c6: #94a3b8;
-        --ok: #4ade80; --err: #f87171; --err-soft: #3b1414; --topbar: #08111a; color-scheme: dark;
+        --bg: #0a1220; --surface: #0f1a2c; --surface-2: #132036; --border: #1e2d45;
+        --text: #e6edf7; --muted: #93a4bf; --accent: #7fb0ff; --accent-rgb: 59 110 200;
+        --gold: #f0c75e; --gold-text: #f0c75e;
+        --c1: #6ea8fe; --c2: #34c79a; --c3: #f0c75e; --c4: #ff7a6b; --c5: #a99bff; --c6: #9aa9bd;
+        --ok: #34c79a; --err: #ff7a6b; --err-soft: #3a1a1a; --topbar: #071021; --topbar-2: #0d1b33; color-scheme: dark;
       }
     }
     * { box-sizing: border-box; }
-    body { margin: 0; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
+    body { margin: 0; font: 14.5px/1.5 var(--font); background: var(--bg); color: var(--text); }
     a { color: var(--accent); }
-    header { background: var(--topbar); color: #fff; padding: 18px 24px; display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
-    header h1 { margin: 0; font-size: 18px; }
-    header p { margin: 2px 0 0; color: #9fb3c2; font-size: 13px; }
+    :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    /* Portada del informe */
+    header {
+      background: linear-gradient(120deg, var(--topbar), var(--topbar-2)); color: #fff; padding: 22px 28px;
+      display: flex; gap: 16px; align-items: flex-end; justify-content: space-between; flex-wrap: wrap;
+      border-bottom: 4px solid var(--gold);
+    }
+    header .sobre { margin: 0 0 4px; color: #f6e7b5; font-size: 11.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+    header h1 { margin: 0; font: 700 24px/1.15 var(--font-num); letter-spacing: -.01em; }
+    header p { margin: 4px 0 0; color: #b9c7dd; font-size: 13px; }
     .actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-    .badge { background: #334155; color: #e2e8f0; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
-    .btn { background: #0d9488; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; }
-    .btn.ghost { background: transparent; border: 1px solid #3b5566; color: #e2e8f0; }
-    .comite { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; }
-    .luz { width: 44px; height: 44px; border-radius: 50%; border: 4px solid var(--border); }
+    .badge { background: #243a5c; color: #f6e7b5; border-radius: var(--radius); padding: 4px 10px; font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+    .btn { background: var(--gold); color: #0b2545; text-decoration: none; padding: 9px 16px; border-radius: var(--radius); font-weight: 700; font-size: 13px; }
+    .btn.ghost { background: transparent; border: 1px solid #3b5a85; color: #e6edf7; }
+    .comite { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: start; }
+    .luz { width: 46px; height: 46px; border-radius: 50%; border: 4px solid var(--border); box-shadow: inset 0 -6px 10px rgb(0 0 0 / 18%); }
     .luz.verde { background: #16a34a; } .luz.amarillo { background: #f59e0b; } .luz.rojo { background: #dc2626; }
-    .comite ul { margin: 6px 0 0; padding-left: 18px; } .comite li { margin: 3px 0; }
-    .aviso { margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); border: 1px dashed var(--border); color: var(--muted); font-size: 13px; }
-    .sev { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--border); }
+    .comite ul { margin: 6px 0 0; padding-left: 18px; } .comite li { margin: 4px 0; }
+    .aviso { margin: 0; padding: 10px 12px; border-radius: var(--radius); background: var(--surface-2); border: 1px dashed var(--border); color: var(--muted); font-size: 13px; }
+    .sev { display: inline-block; padding: 1px 8px; border-radius: var(--radius); font-size: 11.5px; font-weight: 700; background: var(--surface-2); border: 1px solid var(--border); }
     .sev.rechazo { color: var(--err); border-color: currentColor; }
-    main { max-width: 1280px; margin: 0 auto; padding: 24px; display: grid; gap: 20px; }
-    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    main { max-width: 1280px; margin: 0 auto; padding: 26px 24px; display: grid; gap: 22px; counter-reset: seccion; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 14px; }
     @media (min-width: 1100px) { .kpis { grid-template-columns: repeat(4, 1fr); } }
     .kpi, .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
-    .kpi { padding: 14px 16px; }
-    .kpi h2 { margin: 0; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
-    .kpi p { margin: 4px 0 0; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .kpi { padding: 14px 18px 16px; border-top: 3px solid var(--gold); }
+    .kpi h2 { margin: 0; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
+    .kpi p { margin: 6px 0 2px; font: 700 28px/1.1 var(--font-num); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
     .kpi small { color: var(--muted); }
-    .up { color: var(--ok); } .down { color: var(--err); }
-    .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 20px; }
-    .panel { padding: 16px 18px; min-width: 0; }
-    .panel h2 { margin: 0 0 4px; font-size: 15px; }
-    .panel .hint { margin: 0 0 12px; color: var(--muted); font-size: 12.5px; }
+    .up { color: var(--ok); font-weight: 600; } .down { color: var(--err); font-weight: 600; }
+    .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 22px; }
+    .panel { padding: 18px 20px; min-width: 0; }
+    /* Secciones numeradas como en un informe: 01, 02, 03… */
+    .panel h2 { margin: 0 0 4px; font: 700 16px/1.3 var(--font-num); display: flex; align-items: baseline; gap: 10px; }
+    .panel h2::before { counter-increment: seccion; content: counter(seccion, decimal-leading-zero); color: var(--gold-text); font-size: 13px; font-weight: 800; letter-spacing: .06em; }
+    .panel .hint { margin: 0 0 14px; color: var(--muted); font-size: 12.5px; }
     .chart { position: relative; height: 280px; }
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
     th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
     th:first-child, td:first-child, td.text, th.text { text-align: left; }
-    th { color: var(--muted); font-size: 12px; font-weight: 600; background: var(--surface-2); }
-    tr.fail td { background: var(--err-soft); }
-    .heat td.cell { text-align: center; font-weight: 600; }
-    code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12px; }
+    th { color: var(--text); font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; border-bottom: 2px solid var(--text); }
+    table:not(.heat) tbody tr:nth-child(even) td { background: var(--surface-2); }
+    tr.fail td, tbody tr.fail:nth-child(even) td { background: var(--err-soft); }
+    .heat td.cell { text-align: center; font-weight: 700; }
+    code { font-family: "Cascadia Mono", ui-monospace, Consolas, monospace; font-size: 12px; }
     footer { text-align: center; color: var(--muted); font-size: 12.5px; padding: 4px 16px 32px; }
-    @media (max-width: 640px) { main { padding: 16px; } header { padding: 14px 16px; } .chart { height: 240px; } }
+    @media (max-width: 640px) { main { padding: 16px; } header { padding: 16px; } header h1 { font-size: 20px; } .chart { height: 240px; } .kpi p { font-size: 23px; } }
   </style>
 </head>
 <body>
   <header>
     <div>
+      <p class="sobre">Informe mensual · comité de cartera</p>
       <h1>Radar de Cartera · Cartera y cobranza</h1>
       <p>Corte {{ month }} · generado {{ run.generated[:16] | replace("T", " ") }} · v{{ run.version }}</p>
     </div>
@@ -244,7 +263,8 @@
       `<thead><tr><th class="text">Origen \\ Destino</th>${D.roll.destinations.map((d) => `<th>${esc(d)}</th>`).join("")}</tr></thead><tbody>` +
       D.roll.origins.map((o, i) =>
         `<tr><td class="text"><strong>${esc(o)}</strong></td>${D.roll.rates[i].map((r, j) =>
-          `<td class="cell" title="${int(D.roll.counts[i][j])} obligaciones" style="background: rgb(${accent} / ${(r * 0.85).toFixed(2)}); color: ${r > 0.55 ? "#fff" : "inherit"}">${r ? pct(r) : "·"}</td>`).join("")}</tr>`).join("") +
+          // Opacidad tope del 60 %: así el texto normal conserva contraste AA en cualquier celda y tema.
+          `<td class="cell" title="${int(D.roll.counts[i][j])} obligaciones" style="background: rgb(${accent} / ${(r * 0.6).toFixed(2)})">${r ? pct(r) : "·"}</td>`).join("")}</tr>`).join("") +
       "</tbody>";
 
     // ---------- Tablas

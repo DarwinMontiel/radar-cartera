@@ -8,7 +8,7 @@ sirve, arma un modelo estrella en PostgreSQL y entrega KPIs de riesgo y gestión
 tablero web y en Power BI, con los mismos números en los tres.
 
 [![CI](https://github.com/DarwinMontiel/radar-cartera/actions/workflows/ci.yml/badge.svg)](https://github.com/DarwinMontiel/radar-cartera/actions/workflows/ci.yml)
-[![Tablero](https://img.shields.io/badge/tablero-GitHub%20Pages-0d9488)](https://darwinmontiel.github.io/radar-cartera/)
+[![Tablero](https://img.shields.io/badge/tablero-GitHub%20Pages-1f4e9c)](https://darwinmontiel.github.io/radar-cartera/)
 ![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-3776AB?logo=python&logoColor=white)
 ![pandas](https://img.shields.io/badge/pandas-%E2%89%A5%202.2-150458?logo=pandas&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
