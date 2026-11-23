@@ -1,7 +1,8 @@
 # Data warehouse local + ejecución del pipeline:
 #   docker compose up -d postgres
 #   docker compose run --rm etl
-# Reportes en ./reports · DW en postgresql://cartera:cartera@localhost:5432/cartera
+# Reportes en ./reports · DW en postgresql://cartera:cartera@localhost:5433/cartera
+# (5433 para no chocar con un PostgreSQL local; se cambia con CARTERA_PG_PUERTO)
 
 services:
   postgres:
@@ -10,7 +11,7 @@ services:
       POSTGRES_USER: cartera
       POSTGRES_PASSWORD: cartera
       POSTGRES_DB: cartera
-    ports: ["5432:5432"]
+    ports: ["127.0.0.1:${CARTERA_PG_PUERTO:-5433}:5432"]
     volumes: [dwdata:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U cartera -d cartera"]

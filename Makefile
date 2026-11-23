@@ -31,7 +31,9 @@ demo: data ## Pipeline completo con DW en SQLite; abre reports/index.html
 
 dw: ## Levanta PostgreSQL y corre el pipeline en Docker
 	docker compose up -d postgres
-	docker compose run --rm etl
+	mkdir -p reports
+	# Con el usuario del equipo: en Linux, el de la imagen (uid 10001) no puede escribir en ./reports.
+	docker compose run --rm --user "$$(id -u):$$(id -g)" etl
 
 ddl: ## Imprime el DDL de PostgreSQL
 	cartera ddl --dialect postgresql

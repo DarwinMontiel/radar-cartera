@@ -164,7 +164,9 @@ reports/
 ```
 
 Para recalcular un mes pasado: `cartera run --raw data/raw --out reports/agosto --as-of 2026-08-31`.
-Con PostgreSQL en Docker: `make dw` (levanta la base y ejecuta el pipeline contra ella).
+Con PostgreSQL en Docker: `make dw` (levanta la base y ejecuta el pipeline contra ella). El DW queda en
+`postgresql://cartera:cartera@localhost:5433/cartera`: el puerto 5433 evita chocar con un PostgreSQL
+local y se cambia con `CARTERA_PG_PUERTO`.
 ¿Solo quieres ver los datos de entrada? Hay una muestra pequeña en [data/muestra](data/muestra).
 
 ## Calidad
