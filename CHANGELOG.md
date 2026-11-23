@@ -2,6 +2,18 @@
 
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) · [SemVer](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Corregido
+- El comando del inicio rápido (`cartera run … --db sqlite:///reports/dw.sqlite`) fallaba en un
+  clon nuevo porque la carpeta de salida se creaba después de la carga al DW.
+- Un monto como texto con un solo punto de miles y sin símbolo (`150.000`) se leía como 150.
+- `cartera generate` podía fallar al correr un año una gestión del 29 de febrero.
+
+### Agregado
+- Los gráficos del tablero tienen rol y descripción para lectores de pantalla.
+- `docs/calidad-de-datos.md` lista también las reglas de gestores (29 en total).
+
 ## [1.1.0] - 2026-11-12
 
 ### Cambiado

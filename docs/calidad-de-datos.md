@@ -26,6 +26,8 @@ completo + motivo), la hoja *Calidad de datos* del Excel y los conteos en `manif
 | clientes | `segmento_invalido` | rechazo | Rompe la segmentación de estrategias |
 | obligaciones | `obligacion_duplicada`, `cliente_inexistente` | rechazo | Integridad referencial |
 | obligaciones | `monto_invalido`, `plazo_invalido`, `fecha_desembolso_invalida` | rechazo | Valores fuera de dominio |
+| gestores | `gestor_duplicado` | rechazo | Doble exportación del maestro de gestores |
+| gestores | `equipo_invalido` | rechazo | Rompe el análisis por equipo de cobranza |
 | cortes | `corte_duplicado` (obligación + fecha) | rechazo | Duplicaría saldo |
 | cortes | `obligacion_inexistente` | rechazo | Integridad referencial |
 | cortes | `saldo_negativo`, `dias_mora_invalidos` | rechazo | Valores imposibles |
@@ -48,8 +50,8 @@ ocurrido. Por eso queda *fuera de alcance* (`rows_out_of_scope` en `manifest.jso
 cuarentena. Lo fechado después del último corte del exporte sí es una fecha futura y lo
 rechazan `fecha_pago_invalida` y `fecha_gestion_invalida`.
 
-Las reglas se aplican en **orden de dependencia** (clientes → obligaciones → cortes / pagos /
-gestiones) para que la integridad referencial se valide contra datos ya depurados.
+Las reglas se aplican en **orden de dependencia** (clientes → obligaciones → gestores → cortes /
+pagos / gestiones) para que la integridad referencial se valide contra datos ya depurados.
 
 ## Verificación automática
 

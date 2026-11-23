@@ -62,6 +62,12 @@ def test_parse_money_handles_numbers_and_colombian_format() -> None:
     assert out.iloc[5:].isna().all()
 
 
+def test_parse_money_reads_a_single_thousands_dot_as_colombian() -> None:
+    """'150.000' sin símbolo es ciento cincuenta mil, no 150; un número de Excel no cambia."""
+    raw = pd.Series(["150.000", "1.500", "-2.500", " 1.234,5 ", "108800.0", 100.125], dtype=object)
+    assert parse_money(raw).tolist() == [150000.0, 1500.0, -2500.0, 1234.5, 108800.0, 100.125]
+
+
 def test_parse_dates_mixed_formats() -> None:
     raw = pd.Series(
         ["2026-10-03", "03/10/2026", pd.Timestamp("2026-10-03"), "31/02/2026", None], dtype=object

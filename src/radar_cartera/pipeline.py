@@ -114,6 +114,9 @@ def run_pipeline(
     model = _timed(result, "modelado", lambda: build_model(validated, cut))
     result.model = model
 
+    # Antes de la carga: la URL del DW puede apuntar dentro de la carpeta de salida
+    # (p. ej. sqlite:///reports/dw.sqlite en el inicio rápido), que aún no existe.
+    output_dir.mkdir(parents=True, exist_ok=True)
     if database_url:
         engine = create_engine(database_url, future=True)
         try:
@@ -124,7 +127,6 @@ def run_pipeline(
     kpis = _timed(result, "kpis", lambda: compute_all(model, month))
     result.kpis = kpis
 
-    output_dir.mkdir(parents=True, exist_ok=True)
     generated = datetime.now()
     excel = output_dir / f"reporte_cartera_{kpis.month}.xlsx"
     _timed(result, "reporte_excel", lambda: write_excel(kpis, quality, excel, run_id, generated))

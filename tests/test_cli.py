@@ -120,3 +120,16 @@ def test_ddl_command_and_unknown_dialect() -> None:
     bad = runner.invoke(app, ["ddl", "--dialect", "oracle"])
     assert bad.exit_code == 1
     assert "dialecto desconocido" in bad.output
+
+
+def test_run_creates_the_output_folder_before_loading_a_sqlite_dw_inside_it(
+    tmp_path: Path,
+) -> None:
+    """Comando del inicio rápido del README: --db sqlite:///reports/dw.sqlite sin carpeta previa."""
+    raw, out = tmp_path / "raw", tmp_path / "reports"
+    runner.invoke(app, ["generate", "--out", str(raw), "--clients", "60", "--months", "3"])
+    db = f"sqlite:///{(out / 'dw.sqlite').as_posix()}"
+    result = runner.invoke(app, ["run", "--raw", str(raw), "--out", str(out), "--db", db])
+    assert result.exit_code == 0, result.output
+    assert "Cargado al DW" in result.output
+    assert (out / "dw.sqlite").exists()

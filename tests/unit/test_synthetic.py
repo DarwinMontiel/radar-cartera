@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from datetime import date
+
 import pandas as pd
 
-from radar_cartera.synthetic import SyntheticConfig, generate, month_ends
+from radar_cartera.synthetic import SyntheticConfig, dirty_exports, generate, month_ends
 
 
 def test_generation_is_deterministic() -> None:
@@ -39,3 +41,12 @@ def test_dirty_exports_inject_logged_anomalies(synthetic) -> None:  # type: igno
     as_text = synthetic.pagos["valor"].map(lambda v: isinstance(v, str))
     assert as_text.any()
     assert synthetic.pagos["id_pago"].duplicated().sum() == synthetic.anomalies["pagos_duplicados"]
+
+
+def test_future_dated_activity_survives_february_29() -> None:
+    """Una gestión del 29-feb se corre un año sin fallar (2029 no es bisiesto)."""
+    data = generate(SyntheticConfig(seed=3, clients=60, months=3, last_cut=date(2028, 4, 30)))
+    data.gestiones["fecha_gestion"] = pd.Timestamp("2028-02-29 10:00")
+    dirty = dirty_exports(data, seed=3)
+    assert dirty.anomalies["gestiones_fecha_futura"] > 0
+    assert (dirty.gestiones["fecha_gestion"] == pd.Timestamp("2029-02-28 10:00")).any()

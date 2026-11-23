@@ -19,6 +19,8 @@ def _strip_accents(text: str) -> str:
 
 _RESULTADOS_CANON = {_strip_accents(r).casefold(): r for r in RESULTADOS}
 _CIUDADES_CANON = {**CIUDADES, **{_strip_accents(v).casefold(): v for v in CIUDADES.values()}}
+# Monto con punto de miles y coma decimal opcional: '150.000', '-1.234.567,5'.
+_MILES_CO = r"\s*-?\s*\d{1,3}(?:\.\d{3})+(?:,\d+)?\s*"
 
 
 def normalize_documento(values: pd.Series) -> pd.Series:
@@ -52,8 +54,15 @@ def normalize_resultado(values: pd.Series) -> pd.Series:
 
 
 def parse_money(values: pd.Series) -> pd.Series:
-    """Acepta números o texto en formato colombiano: '$ 1.234.567,50' -> 1234567.5."""
-    numeric = pd.to_numeric(values, errors="coerce").astype("float64")
+    """Acepta números o texto en formato colombiano: '$ 1.234.567,50' -> 1234567.5.
+
+    Un texto como '150.000' (punto de miles, sin símbolo) es formato colombiano: vale 150000,
+    no 150. Por eso esos textos no pasan por la conversión numérica directa.
+    """
+    is_text = values.map(lambda v: isinstance(v, str)).to_numpy(dtype=bool)
+    matches = values.astype("string").str.fullmatch(_MILES_CO, na=False).to_numpy(dtype=bool)
+    colombian = is_text & matches
+    numeric = pd.to_numeric(values.mask(colombian), errors="coerce").astype("float64")
     text = values.where(numeric.isna()).astype("string")
     is_negative = text.str.contains("-", regex=False, na=False)
     cleaned = text.str.replace(r"[^\d,]", "", regex=True).str.replace(",", ".", regex=False)

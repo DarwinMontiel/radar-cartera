@@ -414,8 +414,9 @@ def dirty_exports(data: SyntheticData, seed: int) -> SyntheticData:
         for i, r in enumerate(gestiones.loc[noisy, "resultado"])
     ]
     future = np.setdiff1d(_sample(rng, n, 0.002), np.union1d(orphan, noisy))
+    # DateOffset y no replace(year=…): un 29 de febrero no existe el año siguiente.
     gestiones.loc[future, "fecha_gestion"] = [
-        d.replace(year=d.year + 1) for d in gestiones.loc[future, "fecha_gestion"]
+        d + pd.DateOffset(years=1) for d in gestiones.loc[future, "fecha_gestion"]
     ]
     log["gestiones_fecha_futura"] = len(future)
 
